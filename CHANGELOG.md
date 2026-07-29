@@ -29,3 +29,35 @@ Primeira versão navegável do protótipo: landing page única, mobile-first, em
   duplicado (`public_html/public_html/...`) no servidor e resultava em erro 403 (sem index na
   raiz do domínio). Todos os arquivos do site foram movidos para a raiz do repositório —
   a raiz do repo agora corresponde diretamente à raiz do domínio (`public_html` no servidor).
+
+## v0.1.0 — "Aurora" — 2026-07-29
+
+Mudança macro: a Agenda deixa de ser uma lista fixa no código e passa a ser gerada a partir de
+conteúdo real, e cada curso ganha sua própria página de venda.
+
+- **Agenda orientada a dados**: `index.php` agora lê `data/turmas.json` em vez de um array fixo
+  (`includes/turmas.php` tem os helpers de carregamento/formatação). Cards da Agenda mostram
+  preço real e linkam para a página do curso.
+- **Página de venda por curso**: cada turma em `data/turmas.json` ganha uma página própria em
+  `cursos/{slug}.php` (template compartilhado em `includes/curso-page.php`), separada da landing
+  page, com data(s), horário, local, preço e CTA de WhatsApp.
+- **Agente `agenda-sync`** (`.claude/agents/agenda-sync.md`) + `tools/sync_agenda.py`: processa o
+  conteúdo colocado pelo dono do site na pasta local `agenda/` (nunca vai pro git) e publica no
+  site — recorta/redimensiona a imagem, atualiza `data/turmas.json` e gera a página do curso.
+  Suporta dois formatos: imagem solta com os dados no nome do arquivo (`curso NOME DD-MM-AA HHMM
+  valor PRECO.jpg` — o formato realmente usado no dia a dia) ou pasta com `dados.txt` para casos
+  que precisam de mais controle (status manual, descrição). Ver `agenda/AGENDA_README.md`.
+- **Carrossel do Instagram dinâmico**: `includes/instagram.php` busca fotos/reels (e tenta
+  stories) recentes do Instagram via Graph API, com cache de 1h em `data/instagram-cache.json` e
+  fallback automático para fotos estáticas reais do site quando não há token configurado ou a
+  API falha. Ver `INSTAGRAM_SETUP.md` para gerar as credenciais na Meta — ainda não configurado
+  em produção (`secret.env` continua com os campos vazios).
+- **`ROADMAP.md`** criado com os itens combinados para depois: e-commerce/checkout de verdade,
+  Área do Aluno (compras, financeiro, contrato, histórico/presenças, certificados, aulas online)
+  e CRM/painel administrativo multiusuário com permissão por função.
+- Cursos reais cadastrados nesta versão (6, a partir do conteúdo em `agenda/`): Diluições e
+  Preparações de Medicamentos, Administração de Medicamentos Injetáveis/Punção Venosa/Coleta de
+  Sangue, Furo Humanizado, Rotinas Hospitalares, Plantão Sem Medo, Avaliação de Feridas e
+  Curativos. Os 6 cursos fictícios usados como placeholder na v0.0.x foram removidos.
+- `deploy-check` atualizado para cobrir o novo escopo (JSON de dados, páginas de curso, cache do
+  Instagram, segurança do token).

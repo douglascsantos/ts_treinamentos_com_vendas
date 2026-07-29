@@ -1,6 +1,8 @@
 <?php
 /** @var array $config */
 /** @var array $version */
+/** @var string $base_path Definido em header.php — mantém consistência de prefixo. */
+$base_path = $base_path ?? '';
 ?>
 </main>
 
@@ -8,7 +10,7 @@
     <div class="container footer-grid">
         <div class="footer-brand-col">
             <div class="footer-brand">
-                <img src="assets/images/logo-ts.png" alt="TS Treinamentos" width="48" height="48" />
+                <img src="<?= e($base_path) ?>assets/images/logo-ts.png" alt="TS Treinamentos" width="48" height="48" />
                 <div>
                     <p class="brand-title">TS Treinamentos</p>
                     <p class="brand-sub">em Saúde</p>
@@ -28,10 +30,10 @@
         <div class="footer-col">
             <h4>Navegação</h4>
             <ul>
-                <li><a href="#inicio">Início</a></li>
-                <li><a href="#agenda">Cursos e Agenda</a></li>
-                <li><a href="#sobre">Sobre a escola</a></li>
-                <li><a href="#faq">Dúvidas frequentes</a></li>
+                <li><a href="<?= e($base_path) ?>index.php#inicio">Início</a></li>
+                <li><a href="<?= e($base_path) ?>index.php#agenda">Cursos e Agenda</a></li>
+                <li><a href="<?= e($base_path) ?>index.php#sobre">Sobre a escola</a></li>
+                <li><a href="<?= e($base_path) ?>index.php#faq">Dúvidas frequentes</a></li>
             </ul>
         </div>
 
@@ -73,6 +75,6 @@
     <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.588-5.946 0-6.556 5.332-11.891 11.893-11.891 3.181 0 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.481 8.403 0 6.556-5.332 11.892-11.893 11.892-1.99 0-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.886-9.886 0-5.446-4.428-9.886-9.886-9.886-5.448 0-9.886 4.44-9.886 9.886 0 2.226.746 4.312 2.119 5.902l-.43 1.566 1.564-.41-.145-.164z"/></svg>
 </a>
 
-<script src="assets/js/main.js?v=<?= e($version['version']) ?>" defer></script>
+<script src="<?= e($base_path) ?>assets/js/main.js?v=<?= e($version['version']) ?>" defer></script>
 </body>
 </html>

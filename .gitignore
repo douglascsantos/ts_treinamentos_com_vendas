@@ -5,3 +5,5 @@ prototipo_stitch.md
 prototipagem_stitch/
 .claude/
 secret.env
+agenda/
+data/instagram-cache.json

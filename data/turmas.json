@@ -1,0 +1,80 @@
+[
+  {
+    "slug": "diluicoes-e-preparacoes-de-medicamentos",
+    "curso": "Diluições e Preparações de Medicamentos",
+    "datas": [
+      "2026-08-08"
+    ],
+    "horario": "09:00",
+    "local": "Presencial · São José do Rio Preto",
+    "preco": 290.0,
+    "status": "aberta",
+    "imagem": "diluicoes-e-preparacoes-de-medicamentos.jpg",
+    "descricao": ""
+  },
+  {
+    "slug": "administracao-de-medicamentos-injetaveis-puncao-venosa-e-coleta-de-sangue",
+    "curso": "Administração de Medicamentos Injetáveis Punção Venosa e Coleta de Sangue",
+    "datas": [
+      "2026-08-12"
+    ],
+    "horario": "19:00",
+    "local": "Presencial · São José do Rio Preto",
+    "preco": 650.0,
+    "status": "aberta",
+    "imagem": "administracao-de-medicamentos-injetaveis-puncao-venosa-e-coleta-de-sangue.jpg",
+    "descricao": ""
+  },
+  {
+    "slug": "furo-humanizado",
+    "curso": "Furo Humanizado",
+    "datas": [
+      "2026-08-22"
+    ],
+    "horario": "09:00",
+    "local": "Presencial · São José do Rio Preto",
+    "preco": 1450.0,
+    "status": "aberta",
+    "imagem": "furo-humanizado.jpg",
+    "descricao": ""
+  },
+  {
+    "slug": "rotinas-hospitalares",
+    "curso": "Rotinas Hospitalares",
+    "datas": [
+      "2026-08-22"
+    ],
+    "horario": "09:00",
+    "local": "Presencial · São José do Rio Preto",
+    "preco": 1945.0,
+    "status": "aberta",
+    "imagem": "rotinas-hospitalares.jpg",
+    "descricao": ""
+  },
+  {
+    "slug": "plantao-sem-medo",
+    "curso": "Plantão Sem Medo",
+    "datas": [
+      "2026-09-05"
+    ],
+    "horario": "09:00",
+    "local": "Presencial · São José do Rio Preto",
+    "preco": 120.0,
+    "status": "aberta",
+    "imagem": "plantao-sem-medo.jpg",
+    "descricao": ""
+  },
+  {
+    "slug": "avaliacao-de-feridas-e-curativos",
+    "curso": "Avaliação de Feridas e Curativos",
+    "datas": [
+      "2026-09-19"
+    ],
+    "horario": "09:00",
+    "local": "Presencial · São José do Rio Preto",
+    "preco": 420.0,
+    "status": "aberta",
+    "imagem": "avaliacao-de-feridas-e-curativos.jpg",
+    "descricao": ""
+  }
+]

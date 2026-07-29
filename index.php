@@ -1,69 +1,22 @@
 <?php
 require __DIR__ . '/includes/functions.php';
+require __DIR__ . '/includes/env.php';
+require __DIR__ . '/includes/turmas.php';
+require __DIR__ . '/includes/instagram.php';
 $config  = require __DIR__ . '/includes/config.php';
 $version = require __DIR__ . '/includes/version.php';
 
 /**
- * Agenda de turmas (protótipo).
- * Em uma fase futura isso vem do banco (MySQL). Por enquanto é uma lista
- * estática só para validar o layout de alta conversão.
+ * Agenda de turmas — vem de data/turmas.json.
+ * Esse arquivo é atualizado pelo agente "agenda-sync" (ver .claude/agents/agenda-sync.md
+ * e tools/sync_agenda.py) a partir do conteúdo colocado na pasta agenda/.
  */
-$turmas = [
-    [
-        'dia' => '27', 'mes' => 'Ago',
-        'titulo' => 'Perfuração Humanizada',
-        'imagem' => 'course-furo-humanizado.jpg',
-        'status' => 'aberta',
-    ],
-    [
-        'dia' => '03', 'mes' => 'Set',
-        'titulo' => 'Administração de Medicações Injetáveis',
-        'imagem' => 'course-medicacao-injetavel.jpg',
-        'status' => 'ultimas',
-    ],
-    [
-        'dia' => '10', 'mes' => 'Set',
-        'titulo' => 'Eletrocardiograma e Monitorização',
-        'imagem' => 'course-ecg.jpg',
-        'status' => 'aberta',
-    ],
-    [
-        'dia' => '17', 'mes' => 'Set',
-        'titulo' => 'Rotinas Hospitalares (turma estendida + consultoria)',
-        'imagem' => 'course-acls.jpg',
-        'status' => 'esgotada',
-    ],
-    [
-        'dia' => '24', 'mes' => 'Set',
-        'titulo' => 'Processo Seletivo para Provas de Hospitais',
-        'imagem' => 'course-processo-seletivo.jpg',
-        'status' => 'aberta',
-    ],
-    [
-        'dia' => '01', 'mes' => 'Out',
-        'titulo' => 'Acesso Vascular, Sondagem e Coleta de Sangue',
-        'imagem' => 'course-acesso.jpg',
-        'status' => 'aberta',
-    ],
-];
+$turmas = load_turmas();
 
-$status_labels = [
-    'aberta'   => ['Vagas abertas', 'status-open'],
-    'ultimas'  => ['Últimas vagas', 'status-last'],
-    'esgotada' => ['Esgotado', 'status-out'],
-];
-
-/** Fotos de vitrine da rotina da escola — hoje estáticas, pensadas para
- *  no futuro serem substituídas por um feed automático do Instagram
- *  (ver prototipo_stitch.md, seção "Carrossel do Instagram"). */
-$galeria = [
-    ['img' => 'hero-training.jpg', 'alt' => 'Treinamento prático com profissionais de saúde'],
-    ['img' => 'fachada.png', 'alt' => 'Fachada da TS Treinamentos em Saúde'],
-    ['img' => 'course-ecg.jpg', 'alt' => 'Prática de eletrocardiograma'],
-    ['img' => 'course-medicacao-injetavel.jpg', 'alt' => 'Prática de administração de medicação injetável'],
-    ['img' => 'course-furo-humanizado.jpg', 'alt' => 'Treinamento de perfuração humanizada'],
-    ['img' => 'course-processo-seletivo.jpg', 'alt' => 'Preparatório para processo seletivo'],
-];
+/** Vitrine de fotos/vídeos — feed do Instagram quando configurado
+ *  (ver includes/instagram.php e INSTAGRAM_SETUP.md), com fallback estático
+ *  para fotos reais do site caso não haja token configurado ou a API falhe. */
+$galeria = get_instagram_gallery($config);
 
 include __DIR__ . '/includes/header.php';
 ?>
@@ -108,23 +61,25 @@ include __DIR__ . '/includes/header.php';
 
         <div class="course-grid">
             <?php foreach ($turmas as $t):
-                [$label, $statusClass] = $status_labels[$t['status']];
+                [$label, $statusClass] = turma_status($t['status']);
                 $esgotada = $t['status'] === 'esgotada';
-                $waMsg = 'Olá! Quero reservar minha vaga no curso "' . $t['titulo'] . '".';
+                $data = turma_card_date($t['datas']);
+                $paginaCurso = 'cursos/' . $t['slug'] . '.php';
             ?>
             <article class="course-card">
-                <div class="course-img">
+                <a class="course-img" href="<?= e($paginaCurso) ?>">
                     <span class="course-status <?= e($statusClass) ?>"><?= e($label) ?></span>
-                    <span class="course-date"><b><?= e($t['dia']) ?></b><small><?= e($t['mes']) ?></small></span>
-                    <img src="assets/images/<?= e($t['imagem']) ?>" alt="<?= e($t['titulo']) ?>" loading="lazy" />
-                </div>
+                    <span class="course-date"><b><?= e($data['dia']) ?></b><small><?= e($data['mes']) ?></small></span>
+                    <img src="assets/images/cursos/<?= e($t['imagem']) ?>" alt="<?= e($t['curso']) ?>" loading="lazy" />
+                </a>
                 <div class="course-body">
-                    <h3><?= e($t['titulo']) ?></h3>
-                    <p class="course-loc">📍 Presencial · São José do Rio Preto</p>
+                    <h3><a href="<?= e($paginaCurso) ?>"><?= e($t['curso']) ?></a></h3>
+                    <p class="course-loc">📍 <?= e($t['local']) ?></p>
+                    <p class="course-price"><?= e(format_price((float) $t['preco'])) ?></p>
                     <?php if ($esgotada): ?>
-                        <button class="btn btn-muted btn-block" disabled>Lista de espera</button>
+                        <a class="btn btn-muted btn-block" href="<?= e($paginaCurso) ?>">Lista de espera</a>
                     <?php else: ?>
-                        <a class="btn btn-primary btn-block" href="<?= e(wa_link($config['whatsapp'], $waMsg)) ?>" target="_blank" rel="noopener">Garantir vaga</a>
+                        <a class="btn btn-primary btn-block" href="<?= e($paginaCurso) ?>">Ver detalhes e garantir vaga</a>
                     <?php endif; ?>
                 </div>
             </article>
@@ -150,10 +105,17 @@ include __DIR__ . '/includes/header.php';
         </div>
     </div>
     <div class="gallery-scroll" role="list">
-        <?php foreach ($galeria as $g): ?>
-            <div class="gallery-item" role="listitem">
-                <img src="assets/images/<?= e($g['img']) ?>" alt="<?= e($g['alt']) ?>" loading="lazy" />
-            </div>
+        <?php foreach ($galeria as $g):
+            $tag = $g['link'] ? 'a' : 'div';
+        ?>
+            <<?= $tag ?> class="gallery-item" role="listitem"<?php if ($g['link']): ?> href="<?= e($g['link']) ?>" target="_blank" rel="noopener"<?php endif; ?>>
+                <img src="<?= e($g['img']) ?>" alt="<?= e($g['alt']) ?>" loading="lazy" />
+                <?php if (in_array($g['type'], ['reel', 'video'], true)): ?>
+                    <span class="gallery-play" aria-hidden="true">▶</span>
+                <?php elseif ($g['type'] === 'story'): ?>
+                    <span class="gallery-badge">Story</span>
+                <?php endif; ?>
+            </<?= $tag ?>>
         <?php endforeach; ?>
     </div>
 </section>
