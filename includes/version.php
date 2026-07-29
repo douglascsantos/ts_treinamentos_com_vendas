@@ -18,7 +18,7 @@
 return [
     'brand'      => 'TS Treinamentos',
     'year'       => date('Y'),
-    'version'    => '0.0.0',
+    'version'    => '0.0.1',
     'codename'   => 'Aurora',
     'stage'      => 'Protótipo',
     'updated_at' => '2026-07-29',
