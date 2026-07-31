@@ -216,4 +216,30 @@
       }
     });
   }
+
+  /* Padrão "lista primeiro": botão [data-toggle-target="id"] mostra/esconde um
+     bloco escondido por padrão (formulário de cadastro) — usado no painel da
+     equipe pra manter a tela limpa no mobile (lista em cima, formulário só
+     aparece ao apertar "+"). Se o bloco já começa aberto (ex.: formulário de
+     edição pré-preenchido, com erro de validação pra corrigir), o botão parte
+     como "Cancelar". */
+  document.querySelectorAll('[data-toggle-target]').forEach(function (btn) {
+    var target = document.getElementById(btn.getAttribute('data-toggle-target'));
+    if (!target) { return; }
+    var textoAbrir = btn.textContent;
+    var textoFechar = btn.getAttribute('data-toggle-close-text') || 'Cancelar';
+    function sync() {
+      var aberto = !target.hidden;
+      btn.setAttribute('aria-expanded', String(aberto));
+      btn.textContent = aberto ? textoFechar : textoAbrir;
+    }
+    btn.addEventListener('click', function () {
+      target.hidden = !target.hidden;
+      sync();
+      if (!target.hidden) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+    sync();
+  });
 })();

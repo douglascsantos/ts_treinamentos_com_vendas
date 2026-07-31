@@ -71,7 +71,7 @@ if (!in_array($tipo, ['curso', 'produto'], true) || $slug === '') {
 
 if ($tipo === 'curso') {
     $item = find_turma($slug);
-    if (!$item) {
+    if (!$item || !turma_ativa($item)) {
         checkout_erro($config, 'Curso não encontrado', 'Esse curso pode não estar mais disponível.');
         exit;
     }

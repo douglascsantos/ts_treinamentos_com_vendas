@@ -17,7 +17,7 @@ function render_curso_page(string $slug): void
     $version = require __DIR__ . '/version.php';
     $turma   = find_turma($slug);
 
-    if (!$turma) {
+    if (!$turma || !turma_ativa($turma)) {
         http_response_code(404);
         $page_title = 'Curso não encontrado | ' . $config['site_name'];
         $base_path = '../';

@@ -44,6 +44,17 @@ function find_turma(string $slug): ?array
     return null;
 }
 
+/**
+ * Turma desabilitada pelo administrativo (nunca excluída — só marcada
+ * `ativo: false`) não aparece nem pode ser comprada no site público. Pedidos
+ * já feitos continuam mostrando os dados normalmente (ver minha-conta.php,
+ * que não usa esse filtro de propósito).
+ */
+function turma_ativa(array $turma): bool
+{
+    return ($turma['ativo'] ?? true) !== false;
+}
+
 /** [label, classe css] para o status da turma. */
 function turma_status(string $status): array
 {
@@ -111,14 +122,3 @@ function criar_turma(array $dados): array
     return $dados;
 }
 
-function remover_turma(string $slug): bool
-{
-    $turmas = load_turmas();
-    $antes = count($turmas);
-    $turmas = array_values(array_filter($turmas, fn ($t) => $t['slug'] !== $slug));
-    if (count($turmas) === $antes) {
-        return false;
-    }
-    save_turmas($turmas);
-    return true;
-}

@@ -20,31 +20,26 @@ if ($staff['nivel'] === 'diretor') {
 equipe_header_html('Painel Administrativo', $staff['nome']);
 ?>
 
-<div class="equipe-card">
-    <h3>Turmas</h3>
-    <p class="muted">Criar curso, editar vagas/carga horária/status e atribuir instrutor.</p>
-    <a class="btn btn-primary" href="turmas.php">Gerenciar turmas</a>
+<div class="equipe-dash-grid">
+    <a class="equipe-dash-card" href="turmas.php">
+        <h4>Turmas</h4>
+        <p>Criar curso, editar vagas/carga horária/status e atribuir instrutor.</p>
+    </a>
+    <a class="equipe-dash-card" href="cupons.php">
+        <h4>Cupons de desconto</h4>
+        <p>Gerar link de desconto pra um curso ou produto específico.</p>
+    </a>
+    <a class="equipe-dash-card" href="boletos.php">
+        <h4>Boletos</h4>
+        <p>Cadastrar parcela por aluno (upload do PDF).</p>
+    </a>
+    <a class="equipe-dash-card" href="gastos.php">
+        <h4>Gastos</h4>
+        <p>Lançar gastos por curso, fixos, variáveis e de patrimônio.</p>
+    </a>
 </div>
 
-<div class="equipe-card">
-    <h3>Cupons de desconto</h3>
-    <p class="muted">Gerar link de desconto pra um curso ou produto específico.</p>
-    <a class="btn btn-primary" href="cupons.php">Gerenciar cupons</a>
-</div>
-
-<div class="equipe-card">
-    <h3>Boletos</h3>
-    <p class="muted">Cadastrar parcela por aluno (upload do PDF).</p>
-    <a class="btn btn-primary" href="boletos.php">Gerenciar boletos</a>
-</div>
-
-<div class="equipe-card">
-    <h3>Gastos</h3>
-    <p class="muted">Lançar gastos por curso, fixos, variáveis e de patrimônio.</p>
-    <a class="btn btn-primary" href="gastos.php">Gerenciar gastos</a>
-</div>
-
-<div class="equipe-card">
+<div class="equipe-card" style="margin-top:1.5rem;">
     <h3>Em construção</h3>
     <p class="muted">Relatórios de vendas — ver <code>ROADMAP.md</code>.</p>
 </div>

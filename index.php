@@ -10,7 +10,7 @@ $version = require __DIR__ . '/includes/version.php';
  * Esse arquivo é atualizado pelo agente "agenda-sync" (ver .claude/agents/agenda-sync.md
  * e tools/sync_agenda.py) a partir do conteúdo colocado na pasta agenda/.
  */
-$turmas = load_turmas();
+$turmas = array_values(array_filter(load_turmas(), 'turma_ativa'));
 
 /**
  * Produtos TS Treinamentos (cards, kits de treinamento, books) — vem de

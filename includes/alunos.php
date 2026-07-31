@@ -161,6 +161,7 @@ function criar_aluno(array $dados): array
         'area_atuacao'     => $dados['area_atuacao'],
         'senha_hash'       => password_hash($dados['senha'], PASSWORD_DEFAULT),
         'google_sub'       => null,
+        'ativo'            => true,
         'criado_em'        => date('Y-m-d H:i:s'),
     ];
 
@@ -200,6 +201,7 @@ function criar_aluno_google(string $email, string $googleSub, array $dados): arr
         'area_atuacao'     => $dados['area_atuacao'],
         'senha_hash'       => null,
         'google_sub'       => $googleSub,
+        'ativo'            => true,
         'criado_em'        => date('Y-m-d H:i:s'),
     ];
 
@@ -230,11 +232,11 @@ function atualizar_aluno(string $id, array $changes): ?array
     return $atualizado;
 }
 
-/** Confere e-mail/senha. Retorna o aluno (sem o hash) se ok, null se inválido. */
+/** Confere e-mail/senha. Retorna o aluno (sem o hash) se ok, null se inválido ou desabilitado. */
 function verificar_login(string $email, string $senha): ?array
 {
     $aluno = find_aluno_by_email($email);
-    if (!$aluno || !password_verify($senha, $aluno['senha_hash'] ?? '')) {
+    if (!$aluno || ($aluno['ativo'] ?? true) === false || !password_verify($senha, $aluno['senha_hash'] ?? '')) {
         return null;
     }
     unset($aluno['senha_hash']);
@@ -244,4 +246,12 @@ function verificar_login(string $email, string $senha): ?array
 function aluno_area_label(string $chave): string
 {
     return AREAS_ATUACAO[$chave] ?? $chave;
+}
+
+/** Todos os alunos, mais recentes primeiro — pro painel do diretor (ver equipe/alunos.php). */
+function listar_alunos(): array
+{
+    $alunos = load_alunos();
+    usort($alunos, fn ($a, $b) => strcmp($b['criado_em'] ?? '', $a['criado_em'] ?? ''));
+    return $alunos;
 }

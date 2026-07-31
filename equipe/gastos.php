@@ -80,11 +80,15 @@ equipe_header_html('Gastos', $staff['nome']);
 </div>
 
 <div class="equipe-card">
-    <h3>Lançar gasto</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;">
+        <h3 style="margin:0;">Lançar gasto</h3>
+        <button type="button" class="btn-add-toggle" data-toggle-target="formGasto" data-toggle-close-text="Cancelar">+ Novo gasto</button>
+    </div>
+    <div class="toggle-form" id="formGasto" <?= $erros ? '' : 'hidden' ?>>
     <form method="post">
         <?= csrf_field() ?>
         <input type="hidden" name="acao" value="criar_gasto" />
-        <div class="form-row">
+        <div class="equipe-form-row">
             <div class="form-field">
                 <label>Tipo</label>
                 <select name="tipo" id="gastoTipo" required>
@@ -107,13 +111,14 @@ equipe_header_html('Gastos', $staff['nome']);
                 <?php endforeach; ?>
             </select>
         </div>
-        <div class="form-row">
+        <div class="equipe-form-row">
             <div class="form-field"><label>Valor (R$)</label><input type="text" name="valor" placeholder="150,00" required /></div>
             <div class="form-field"><label>Data</label><input type="date" name="data_gasto" value="<?= e(date('Y-m-d')) ?>" required /></div>
         </div>
         <div class="form-field"><label>Descrição</label><input type="text" name="descricao" /></div>
         <button type="submit" class="btn btn-primary">Lançar gasto</button>
     </form>
+    </div>
 </div>
 
 <div class="equipe-card">

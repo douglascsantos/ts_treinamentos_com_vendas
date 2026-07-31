@@ -249,3 +249,41 @@ Duas melhorias pedidas pelo cliente: acesso mais fácil pra equipe e URLs mais l
   redirecionado (301) pra versão limpa automaticamente, sem precisar mudar nenhum link existente
   no código. Só afeta GET (navegação) — formulários, checkout e o webhook da InfinitePay
   continuam funcionando exatamente igual, nunca são redirecionados.
+
+## v2.2.0 — "Clara" — 2026-07-31
+
+Padrão de UX único pra todo o painel interno da equipe, pedido pelo cliente pra deixar as telas de
+cadastro mais limpas no celular. Regra nova e permanente: **nunca excluímos nada, só inativamos**
+— garante que dado nenhum fica corrompido ou incompleto por causa de referência quebrada.
+
+- **Padrão "lista primeiro"**: toda tela de cadastro (instrutores, administradores, alunos,
+  turmas) agora mostra a lista primeiro, com um botão "+" verde que revela o formulário de
+  cadastro (`[data-toggle-target]`, novo helper genérico em `assets/js/main.js` + CSS
+  compartilhado em `includes/equipe.php`). Cada item da lista é um link — clicar nele abre o
+  mesmo formulário preenchido pra editar, com Salvar/Cancelar, voltando pra lista ao salvar.
+- **Desabilitar em vez de excluir**: todo item da lista ganhou um botão "Desabilitar"/"Reativar"
+  que só marca `ativo: false` — nunca remove o registro. `turmas` e `alunos` ganharam o campo
+  `ativo` (JSON, antes só `instrutores`/`administradores` no MySQL tinham); turma inativa some do
+  site público e do checkout (`turma_ativa()`, novo helper) mas continua aparecendo normalmente
+  pra quem já comprou (`minha-conta.php` não filtra, de propósito); aluno inativo não consegue
+  mais logar (`verificar_login()`, `auth/google-callback.php`).
+- **`remover_turma()` removida**: era a única função de exclusão de verdade que restava no código
+  (`includes/turmas.php`) — substituída por `atualizar_turma($slug, ['ativo' => false])`.
+  `equipe/turmas.php` reescrita: criar turma fica atrás do "+", editar é por link
+  (`?editar={slug}`) numa tela dedicada, e o `slug` nunca muda depois de criado (mesmo se o nome
+  do curso for corrigido) pra não quebrar link de venda nem pedido antigo que aponta pra ele.
+- Administrador não consegue mais desabilitar a própria conta (bloqueio explícito em
+  `equipe/administradores.php`, evita se trancar fora do painel sem querer).
+- `equipe/diretor.php` e `administrativo.php` viraram dashboards enxutos — grade de cartões-link
+  pra cada área, sem formulário nenhum solto na tela inicial.
+- `equipe/cupons.php` e `equipe/gastos.php`: só o formulário de criação ganhou o mesmo botão "+"
+  por consistência visual — continuam sem editar/desabilitar de propósito (são registro
+  financeiro/histórico de uso único, não cadastro editável).
+- **Bug pego pela revisão de design antes do deploy**: `.form-row` (classe já existente, pensada
+  só pra par rótulo-curto + campo-largo tipo "Pronome") foi reaproveitada por engano em vários
+  formulários novos pra pares onde os dois campos precisam de largura normal (nome, CPF, e-mail,
+  WhatsApp, preço, data) — como o `body` do site é `overflow-x: hidden`, o campo esmagado em
+  110px ficaria cortado silenciosamente em vez de aparecer. Corrigido com uma classe nova,
+  `.equipe-form-row` (`includes/equipe.php`), 1 coluna no celular e 2 colunas iguais a partir de
+  480px. Também aumentado o alvo de toque de "Desabilitar"/"Reativar" pra 44px e adicionado
+  reforço `[hidden]` em `.toggle-form` (mesmo padrão do `.mobile-nav`, ver v2.1.0).

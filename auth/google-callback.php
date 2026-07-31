@@ -49,6 +49,11 @@ if (!$aluno) {
     exit;
 }
 
+if (($aluno['ativo'] ?? true) === false) {
+    header('Location: /area-do-aluno.php?google_erro=1');
+    exit;
+}
+
 if (empty($aluno['google_sub'])) {
     // Conta já existia (cadastro normal com esse e-mail) — vincula o Google pra
     // próxima vez, sem mexer em mais nada da conta.

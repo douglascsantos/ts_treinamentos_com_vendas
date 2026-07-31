@@ -148,8 +148,9 @@ referencial. FKs removidas; validação de dono/vínculo fica na aplicação (ve
 **Construído e testado localmente (sem deploy) — login e painéis de equipe:**
 - `equipe/login.php`/`logout.php` — login único: tenta `administradores` primeiro, depois
   `instrutores`; redireciona pro painel certo conforme o tipo/nível.
-- `equipe/diretor.php` — cadastra instrutor, administrativo/diretor e aluno; lista instrutores e
-  administradores; upload da própria assinatura.
+- `equipe/diretor.php` — dashboard com links pra cada área (só diretor acessa); upload da própria
+  assinatura. Cadastro de instrutor/administrativo/diretor/aluno mora nas telas dedicadas
+  (`equipe/instrutores.php`, `administradores.php`, `alunos.php` — todas exigem `nivel === 'diretor'`).
 - `equipe/instrutor.php` — vê os próprios dados, upload da própria assinatura.
 - `equipe/administrativo.php` — links pras telas abaixo; relatório de vendas ainda não construído.
 - `equipe/turmas.php` — cria/remove curso (gera a página de venda automaticamente), edita vagas

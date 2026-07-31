@@ -15,7 +15,8 @@
     "carga_horaria": 0,
     "vagas_total": 0,
     "vagas_ocupadas": 0,
-    "instrutor_id": null
+    "instrutor_id": null,
+    "ativo": true
   },
   {
     "slug": "administracao-de-medicamentos-injetaveis-puncao-venosa-e-coleta-de-sangue",
@@ -33,7 +34,8 @@
     "carga_horaria": 0,
     "vagas_total": 0,
     "vagas_ocupadas": 0,
-    "instrutor_id": null
+    "instrutor_id": null,
+    "ativo": true
   },
   {
     "slug": "furo-humanizado",
@@ -51,7 +53,8 @@
     "carga_horaria": 0,
     "vagas_total": 0,
     "vagas_ocupadas": 0,
-    "instrutor_id": null
+    "instrutor_id": null,
+    "ativo": true
   },
   {
     "slug": "rotinas-hospitalares",
@@ -69,7 +72,8 @@
     "carga_horaria": 0,
     "vagas_total": 0,
     "vagas_ocupadas": 0,
-    "instrutor_id": null
+    "instrutor_id": null,
+    "ativo": true
   },
   {
     "slug": "plantao-sem-medo",
@@ -87,7 +91,8 @@
     "carga_horaria": 0,
     "vagas_total": 0,
     "vagas_ocupadas": 0,
-    "instrutor_id": null
+    "instrutor_id": null,
+    "ativo": true
   },
   {
     "slug": "avaliacao-de-feridas-e-curativos",
@@ -105,6 +110,7 @@
     "carga_horaria": 0,
     "vagas_total": 0,
     "vagas_ocupadas": 0,
-    "instrutor_id": null
+    "instrutor_id": null,
+    "ativo": true
   }
 ]

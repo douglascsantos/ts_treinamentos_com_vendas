@@ -77,11 +77,15 @@ equipe_header_html('Cupons de Desconto', $staff['nome']);
 <?php endif; ?>
 
 <div class="equipe-card">
-    <h3>Gerar cupom</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;">
+        <h3 style="margin:0;">Gerar cupom</h3>
+        <button type="button" class="btn-add-toggle" data-toggle-target="formCupom" data-toggle-close-text="Cancelar">+ Novo cupom</button>
+    </div>
+    <div class="toggle-form" id="formCupom" <?= $erros ? '' : 'hidden' ?>>
     <form method="post">
         <?= csrf_field() ?>
         <input type="hidden" name="acao" value="criar_cupom" />
-        <div class="form-row">
+        <div class="equipe-form-row">
             <div class="form-field">
                 <label>Tipo</label>
                 <select name="tipo_item" id="cupomTipo" required>
@@ -105,7 +109,7 @@ equipe_header_html('Cupons de Desconto', $staff['nome']);
                 </select>
             </div>
         </div>
-        <div class="form-row">
+        <div class="equipe-form-row">
             <div class="form-field">
                 <label>Tipo de desconto</label>
                 <select name="tipo_desconto" required>
@@ -118,6 +122,7 @@ equipe_header_html('Cupons de Desconto', $staff['nome']);
         <div class="form-field"><label>Validade (dias)</label><input type="number" name="validade_dias" min="1" value="7" required /></div>
         <button type="submit" class="btn btn-primary">Gerar cupom</button>
     </form>
+    </div>
 </div>
 
 <div class="equipe-card">

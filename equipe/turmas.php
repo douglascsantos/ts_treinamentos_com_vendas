@@ -1,10 +1,13 @@
 <?php
 /**
- * Gestão de turmas (administrativo/diretor): cria/remove curso, edita vagas
- * (interno, nunca aparece pro cliente), carga horária, status público e
- * atribui instrutor. Continua escrevendo em data/turmas.json — o mesmo
- * arquivo que o site público e o agente agenda-sync leem (ver
- * tools/sync_agenda.py, que agora preserva esses campos ao re-sincronizar).
+ * Gestão de turmas: lista primeiro, "+" revela o formulário de criação,
+ * clicar numa turma abre o mesmo formulário pra editar (Salvar/Cancelar),
+ * "Desabilitar"/"Reativar" no lugar de excluir — turma desabilitada some do
+ * site público e não pode mais ser comprada, mas continua no banco (pedidos
+ * antigos que referenciam ela continuam mostrando os dados certos). Continua
+ * escrevendo em data/turmas.json — o mesmo arquivo que o site público e o
+ * agente agenda-sync leem (ver tools/sync_agenda.py, que preserva esses
+ * campos ao re-sincronizar).
  */
 require __DIR__ . '/../includes/functions.php';
 require __DIR__ . '/../includes/env.php';
@@ -19,12 +22,14 @@ $staff = equipe_exigir_login(['administrador']);
 
 $mensagens = [];
 $erros = [];
-$acao = $_SERVER['REQUEST_METHOD'] === 'POST' ? ($_POST['acao'] ?? '') : '';
 
-if ($acao === 'criar_turma') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar_turma') {
     if (!csrf_verify($_POST['csrf_token'] ?? null)) {
         $erros[] = 'Sessão expirada, tente de novo.';
     } else {
+        $slugExistente = $_POST['slug_original'] ?? '';
+        $editando = $slugExistente !== '' ? find_turma($slugExistente) : null;
+
         $curso = trim($_POST['curso'] ?? '');
         $datasRaw = trim($_POST['datas'] ?? '');
         $horario = trim($_POST['horario'] ?? '');
@@ -33,10 +38,13 @@ if ($acao === 'criar_turma') {
         $cargaHoraria = (int) ($_POST['carga_horaria'] ?? 0);
         $codigoTurma = trim($_POST['codigo_turma'] ?? '');
         $descricao = trim($_POST['descricao'] ?? '');
+        $vagasTotal = (int) ($_POST['vagas_total'] ?? 0);
+        $vagasOcupadas = (int) ($_POST['vagas_ocupadas'] ?? 0);
+        $status = $_POST['status'] ?? 'aberta';
+        $instrutorId = $_POST['instrutor_id'] !== '' ? $_POST['instrutor_id'] : null;
 
-        $datas = array_values(array_filter(array_map('trim', explode(',', $datasRaw))));
         $datasIso = [];
-        foreach ($datas as $d) {
+        foreach (array_filter(array_map('trim', explode(',', $datasRaw))) as $d) {
             $ts = DateTime::createFromFormat('d/m/Y', $d);
             if ($ts) {
                 $datasIso[] = $ts->format('Y-m-d');
@@ -52,7 +60,28 @@ if ($acao === 'criar_turma') {
             $erros[] = 'Informe o horário.';
         } elseif ($preco <= 0) {
             $erros[] = 'Informe um preço válido.';
-        } else {
+        }
+
+        if (!$erros && $editando) {
+            $imagemNome = $editando['imagem'] ?? null;
+            if (!empty($_FILES['imagem']['name'])) {
+                $info = @getimagesize($_FILES['imagem']['tmp_name'] ?? '');
+                if ($info && $_FILES['imagem']['error'] === UPLOAD_ERR_OK) {
+                    $imagemNome = $editando['slug'] . '.jpg';
+                    @move_uploaded_file($_FILES['imagem']['tmp_name'], __DIR__ . '/../assets/images/cursos/' . $imagemNome);
+                }
+            }
+            atualizar_turma($editando['slug'], [
+                'curso' => $curso, 'datas' => $datasIso, 'horario' => $horario,
+                'local' => $local !== '' ? $local : 'Presencial · São José do Rio Preto',
+                'preco' => $preco, 'carga_horaria' => $cargaHoraria,
+                'codigo_turma' => $codigoTurma !== '' ? $codigoTurma : ($editando['codigo_turma'] ?? ''),
+                'vagas_total' => $vagasTotal, 'vagas_ocupadas' => $vagasOcupadas,
+                'status' => $status, 'instrutor_id' => $instrutorId,
+                'imagem' => $imagemNome, 'descricao' => $descricao,
+            ]);
+            $mensagens[] = 'Turma atualizada.';
+        } elseif (!$erros) {
             $slug = slugify($curso);
             if (find_turma($slug)) {
                 $erros[] = 'Já existe uma turma com esse nome (slug "' . $slug . '").';
@@ -65,66 +94,69 @@ if ($acao === 'criar_turma') {
                         @move_uploaded_file($_FILES['imagem']['tmp_name'], __DIR__ . '/../assets/images/cursos/' . $imagemNome);
                     }
                 }
-
-                $turma = [
-                    'slug'            => $slug,
-                    'curso'           => $curso,
-                    'datas'           => $datasIso,
-                    'horario'         => $horario,
-                    'local'           => $local !== '' ? $local : 'Presencial · São José do Rio Preto',
-                    'preco'           => $preco,
-                    'status'          => 'aberta',
-                    'imagem'          => $imagemNome,
-                    'descricao'       => $descricao,
-                    'codigo_turma'    => $codigoTurma !== '' ? $codigoTurma : strtoupper($slug) . '-' . date('ymd'),
-                    'carga_horaria'   => $cargaHoraria,
-                    'vagas_total'     => (int) ($_POST['vagas_total'] ?? 0),
-                    'vagas_ocupadas'  => 0,
-                    'instrutor_id'    => $_POST['instrutor_id'] !== '' ? $_POST['instrutor_id'] : null,
-                ];
-                criar_turma($turma);
-
+                criar_turma([
+                    'slug' => $slug, 'curso' => $curso, 'datas' => $datasIso, 'horario' => $horario,
+                    'local' => $local !== '' ? $local : 'Presencial · São José do Rio Preto',
+                    'preco' => $preco, 'status' => 'aberta', 'imagem' => $imagemNome, 'descricao' => $descricao,
+                    'codigo_turma' => $codigoTurma !== '' ? $codigoTurma : strtoupper($slug) . '-' . date('ymd'),
+                    'carga_horaria' => $cargaHoraria, 'vagas_total' => $vagasTotal, 'vagas_ocupadas' => 0,
+                    'instrutor_id' => $instrutorId, 'ativo' => true,
+                ]);
                 $cursoPageTemplate = "<?php\nrequire __DIR__ . '/../includes/functions.php';\n"
                     . "require __DIR__ . '/../includes/env.php';\nrequire __DIR__ . '/../includes/turmas.php';\n"
                     . "require __DIR__ . '/../includes/curso-page.php';\nrender_curso_page('{$slug}');\n";
                 file_put_contents(__DIR__ . '/../cursos/' . $slug . '.php', $cursoPageTemplate);
-
                 $mensagens[] = 'Turma "' . $curso . '" criada.';
             }
         }
-    }
-}
 
-if ($acao === 'atualizar_turma') {
-    if (!csrf_verify($_POST['csrf_token'] ?? null)) {
-        $erros[] = 'Sessão expirada, tente de novo.';
-    } else {
-        $slug = $_POST['slug'] ?? '';
-        atualizar_turma($slug, [
-            'vagas_total'    => (int) ($_POST['vagas_total'] ?? 0),
-            'vagas_ocupadas' => (int) ($_POST['vagas_ocupadas'] ?? 0),
-            'carga_horaria'  => (int) ($_POST['carga_horaria'] ?? 0),
-            'codigo_turma'   => trim($_POST['codigo_turma'] ?? ''),
-            'status'         => $_POST['status'] ?? 'aberta',
-            'instrutor_id'   => $_POST['instrutor_id'] !== '' ? $_POST['instrutor_id'] : null,
-        ]);
-        $mensagens[] = 'Turma atualizada.';
-    }
-}
-
-if ($acao === 'remover_turma') {
-    if (!csrf_verify($_POST['csrf_token'] ?? null)) {
-        $erros[] = 'Sessão expirada, tente de novo.';
-    } else {
-        $slug = $_POST['slug'] ?? '';
-        if (remover_turma($slug)) {
-            @unlink(__DIR__ . '/../cursos/' . $slug . '.php');
-            $mensagens[] = 'Turma removida.';
-        } else {
-            $erros[] = 'Turma não encontrada.';
+        if (!$erros) {
+            header('Location: turmas.php');
+            exit;
         }
     }
 }
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($_POST['acao'] ?? '', ['desativar_turma', 'ativar_turma'], true)) {
+    if (csrf_verify($_POST['csrf_token'] ?? null)) {
+        atualizar_turma($_POST['slug'] ?? '', ['ativo' => $_POST['acao'] === 'ativar_turma']);
+    }
+    header('Location: turmas.php');
+    exit;
+}
+
+$editando = null;
+if (isset($_GET['editar'])) {
+    $editando = find_turma($_GET['editar']);
+}
+
+if ($editando) {
+    $valores = [
+        'slug_original' => $editando['slug'], 'curso' => $editando['curso'],
+        'datas' => implode(', ', array_map(fn ($d) => date('d/m/Y', strtotime($d)), $editando['datas'])),
+        'horario' => $editando['horario'], 'local' => $editando['local'], 'preco' => number_format((float) $editando['preco'], 2, ',', ''),
+        'carga_horaria' => $editando['carga_horaria'] ?? 0, 'vagas_total' => $editando['vagas_total'] ?? 0,
+        'vagas_ocupadas' => $editando['vagas_ocupadas'] ?? 0, 'codigo_turma' => $editando['codigo_turma'] ?? '',
+        'status' => $editando['status'] ?? 'aberta', 'instrutor_id' => $editando['instrutor_id'] ?? '',
+        'descricao' => $editando['descricao'] ?? '',
+    ];
+} elseif ($erros && isset($_POST['curso'])) {
+    $valores = [
+        'slug_original' => $_POST['slug_original'] ?? '', 'curso' => $_POST['curso'], 'datas' => $_POST['datas'] ?? '',
+        'horario' => $_POST['horario'] ?? '', 'local' => $_POST['local'] ?? '', 'preco' => $_POST['preco'] ?? '',
+        'carga_horaria' => $_POST['carga_horaria'] ?? 0, 'vagas_total' => $_POST['vagas_total'] ?? 0,
+        'vagas_ocupadas' => $_POST['vagas_ocupadas'] ?? 0, 'codigo_turma' => $_POST['codigo_turma'] ?? '',
+        'status' => $_POST['status'] ?? 'aberta', 'instrutor_id' => $_POST['instrutor_id'] ?? '',
+        'descricao' => $_POST['descricao'] ?? '',
+    ];
+} else {
+    $valores = [
+        'slug_original' => '', 'curso' => '', 'datas' => '', 'horario' => '', 'local' => '', 'preco' => '',
+        'carga_horaria' => 0, 'vagas_total' => 0, 'vagas_ocupadas' => 0, 'codigo_turma' => '',
+        'status' => 'aberta', 'instrutor_id' => '', 'descricao' => '',
+    ];
+}
+$formAberto = $editando !== null || (bool) $erros;
 
 $turmas = load_turmas();
 $instrutores = listar_instrutores();
@@ -136,6 +168,8 @@ foreach ($instrutores as $i) {
 equipe_header_html('Turmas', $staff['nome']);
 ?>
 
+<?php if ($staff['nivel'] === 'diretor'): ?><p style="margin-bottom:1.25rem;"><a href="diretor.php">← Painel do diretor</a></p><?php endif; ?>
+
 <?php foreach ($mensagens as $m): ?>
     <div class="form-errors-box" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#15803d;"><?= e($m) ?></div>
 <?php endforeach; ?>
@@ -144,82 +178,93 @@ equipe_header_html('Turmas', $staff['nome']);
 <?php endif; ?>
 
 <div class="equipe-card">
-    <h3>Criar turma</h3>
-    <form method="post" enctype="multipart/form-data">
-        <?= csrf_field() ?>
-        <input type="hidden" name="acao" value="criar_turma" />
-        <div class="form-field"><label>Curso</label><input type="text" name="curso" required /></div>
-        <div class="form-field"><label>Datas (DD/MM/AAAA, separadas por vírgula se houver mais de uma)</label><input type="text" name="datas" placeholder="08/08/2026, 15/08/2026" required /></div>
-        <div class="form-row">
-            <div class="form-field"><label>Horário</label><input type="text" name="horario" placeholder="09:00" required /></div>
-            <div class="form-field"><label>Preço (R$)</label><input type="text" name="preco" placeholder="290,00" required /></div>
-        </div>
-        <div class="form-field"><label>Local</label><input type="text" name="local" placeholder="Presencial · São José do Rio Preto" /></div>
-        <div class="form-row">
-            <div class="form-field"><label>Carga horária (horas)</label><input type="number" name="carga_horaria" min="0" value="0" /></div>
-            <div class="form-field"><label>Vagas totais (interno, não aparece pro cliente)</label><input type="number" name="vagas_total" min="0" value="0" /></div>
-        </div>
-        <div class="form-row">
-            <div class="form-field"><label>Código da turma (opcional)</label><input type="text" name="codigo_turma" placeholder="CALC-2607-01" /></div>
-            <div class="form-field">
-                <label>Instrutor responsável</label>
-                <select name="instrutor_id">
-                    <option value="">-- Sem instrutor ainda --</option>
-                    <?php foreach ($instrutores as $i): ?>
-                        <option value="<?= e($i['id']) ?>"><?= e($i['nome_completo']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-        </div>
-        <div class="form-field"><label>Imagem</label><input type="file" name="imagem" accept="image/*" /></div>
-        <div class="form-field"><label>Descrição</label><input type="text" name="descricao" /></div>
-        <button type="submit" class="btn btn-primary">Criar turma</button>
-    </form>
-</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;">
+        <h3 style="margin:0;">Turmas (<?= count($turmas) ?>)</h3>
+        <?php if (!$editando): ?>
+            <button type="button" class="btn-add-toggle" data-toggle-target="formTurma" data-toggle-close-text="Cancelar">+ Nova turma</button>
+        <?php endif; ?>
+    </div>
 
-<div class="equipe-card">
-    <h3>Turmas (<?= count($turmas) ?>)</h3>
-    <?php foreach ($turmas as $t): ?>
-        <div style="border-top:1px solid var(--border);padding:1rem 0;">
-            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;align-items:baseline;">
-                <strong><?= e($t['curso']) ?></strong>
-                <span class="muted" style="font-size:.82rem;"><?= e(turma_dates_full($t['datas'])) ?> às <?= e($t['horario']) ?> · <?= e(format_price((float) $t['preco'])) ?></span>
-            </div>
-            <form method="post" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;margin-top:.65rem;">
-                <?= csrf_field() ?>
-                <input type="hidden" name="acao" value="atualizar_turma" />
-                <input type="hidden" name="slug" value="<?= e($t['slug']) ?>" />
-                <div class="form-field" style="margin:0;"><label>Código</label><input type="text" name="codigo_turma" value="<?= e($t['codigo_turma'] ?? '') ?>" style="width:140px;" /></div>
-                <div class="form-field" style="margin:0;"><label>Carga horária</label><input type="number" name="carga_horaria" min="0" value="<?= e((string) ($t['carga_horaria'] ?? 0)) ?>" style="width:90px;" /></div>
-                <div class="form-field" style="margin:0;"><label>Vagas totais</label><input type="number" name="vagas_total" min="0" value="<?= e((string) ($t['vagas_total'] ?? 0)) ?>" style="width:90px;" /></div>
-                <div class="form-field" style="margin:0;"><label>Vagas ocupadas</label><input type="number" name="vagas_ocupadas" min="0" value="<?= e((string) ($t['vagas_ocupadas'] ?? 0)) ?>" style="width:90px;" /></div>
-                <div class="form-field" style="margin:0;">
-                    <label>Status público</label>
-                    <select name="status" style="width:130px;">
-                        <?php foreach (['aberta' => 'Vagas abertas', 'ultimas' => 'Últimas vagas', 'esgotada' => 'Esgotado'] as $v => $l): ?>
-                            <option value="<?= e($v) ?>" <?= ($t['status'] ?? '') === $v ? 'selected' : '' ?>><?= e($l) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+    <?php if (!$turmas): ?>
+        <p class="equipe-empty">Nenhuma turma cadastrada ainda.</p>
+    <?php else: ?>
+        <div class="equipe-list">
+            <?php foreach ($turmas as $t): ?>
+                <?php $ativa = turma_ativa($t); ?>
+                <div class="equipe-list-item">
+                    <a class="equipe-list-link" href="turmas.php?editar=<?= e($t['slug']) ?>">
+                        <?= e($t['curso']) ?>
+                        <span class="equipe-list-meta">
+                            <?= e(turma_dates_full($t['datas'])) ?> às <?= e($t['horario']) ?> · <?= e(format_price((float) $t['preco'])) ?>
+                            <?php if (!empty($t['instrutor_id']) && isset($instrutoresPorId[$t['instrutor_id']])): ?> · <?= e($instrutoresPorId[$t['instrutor_id']]) ?><?php endif; ?>
+                        </span>
+                    </a>
+                    <div class="equipe-list-actions">
+                        <span class="<?= $ativa ? 'badge-ativo' : 'badge-inativo' ?>"><?= $ativa ? 'Ativa' : 'Inativa' ?></span>
+                        <form method="post" style="display:inline;">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="acao" value="<?= $ativa ? 'desativar_turma' : 'ativar_turma' ?>" />
+                            <input type="hidden" name="slug" value="<?= e($t['slug']) ?>" />
+                            <button type="submit" class="<?= $ativa ? 'btn-disable' : 'btn-enable' ?>"><?= $ativa ? 'Desabilitar' : 'Reativar' ?></button>
+                        </form>
+                    </div>
                 </div>
-                <div class="form-field" style="margin:0;">
-                    <label>Instrutor</label>
-                    <select name="instrutor_id" style="width:170px;">
-                        <option value="">-- Sem instrutor --</option>
-                        <?php foreach ($instrutores as $i): ?>
-                            <option value="<?= e($i['id']) ?>" <?= ($t['instrutor_id'] ?? '') === $i['id'] ? 'selected' : '' ?>><?= e($i['nome_completo']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary" style="padding:.55rem .9rem;font-size:.82rem;">Salvar</button>
-            </form>
-            <form method="post" onsubmit="return confirm('Remover essa turma? Isso não pode ser desfeito.');" style="margin-top:.5rem;">
-                <?= csrf_field() ?>
-                <input type="hidden" name="acao" value="remover_turma" />
-                <input type="hidden" name="slug" value="<?= e($t['slug']) ?>" />
-                <button type="submit" class="btn btn-outline-dark" style="padding:.4rem .8rem;font-size:.78rem;">Remover turma</button>
-            </form>
+            <?php endforeach; ?>
         </div>
-    <?php endforeach; ?>
+    <?php endif; ?>
+
+    <div class="toggle-form" id="formTurma" <?= $formAberto ? '' : 'hidden' ?>>
+        <h4 style="margin-bottom:1rem;"><?= $editando ? 'Editar turma' : 'Nova turma' ?></h4>
+        <form method="post" enctype="multipart/form-data">
+            <?= csrf_field() ?>
+            <input type="hidden" name="acao" value="salvar_turma" />
+            <input type="hidden" name="slug_original" value="<?= e($valores['slug_original']) ?>" />
+            <div class="form-field"><label>Curso</label><input type="text" name="curso" value="<?= e($valores['curso']) ?>" required /></div>
+            <div class="form-field"><label>Datas (DD/MM/AAAA, separadas por vírgula se houver mais de uma)</label><input type="text" name="datas" value="<?= e($valores['datas']) ?>" placeholder="08/08/2026, 15/08/2026" required /></div>
+            <div class="equipe-form-row">
+                <div class="form-field"><label>Horário</label><input type="text" name="horario" value="<?= e($valores['horario']) ?>" placeholder="09:00" required /></div>
+                <div class="form-field"><label>Preço (R$)</label><input type="text" name="preco" value="<?= e((string) $valores['preco']) ?>" placeholder="290,00" required /></div>
+            </div>
+            <div class="form-field"><label>Local</label><input type="text" name="local" value="<?= e($valores['local']) ?>" placeholder="Presencial · São José do Rio Preto" /></div>
+            <div class="equipe-form-row">
+                <div class="form-field"><label>Carga horária (horas)</label><input type="number" name="carga_horaria" min="0" value="<?= e((string) $valores['carga_horaria']) ?>" /></div>
+                <div class="form-field"><label>Vagas totais (interno)</label><input type="number" name="vagas_total" min="0" value="<?= e((string) $valores['vagas_total']) ?>" /></div>
+            </div>
+            <?php if ($editando): ?>
+                <div class="equipe-form-row">
+                    <div class="form-field"><label>Vagas ocupadas</label><input type="number" name="vagas_ocupadas" min="0" value="<?= e((string) $valores['vagas_ocupadas']) ?>" /></div>
+                    <div class="form-field">
+                        <label>Status público</label>
+                        <select name="status">
+                            <?php foreach (['aberta' => 'Vagas abertas', 'ultimas' => 'Últimas vagas', 'esgotada' => 'Esgotado'] as $v => $l): ?>
+                                <option value="<?= e($v) ?>" <?= $valores['status'] === $v ? 'selected' : '' ?>><?= e($l) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+            <?php else: ?>
+                <input type="hidden" name="vagas_ocupadas" value="0" />
+            <?php endif; ?>
+            <div class="equipe-form-row">
+                <div class="form-field"><label>Código da turma (opcional)</label><input type="text" name="codigo_turma" value="<?= e($valores['codigo_turma']) ?>" placeholder="CALC-2607-01" /></div>
+                <div class="form-field">
+                    <label>Instrutor responsável</label>
+                    <select name="instrutor_id">
+                        <option value="">-- Sem instrutor ainda --</option>
+                        <?php foreach ($instrutores as $i): ?>
+                            <option value="<?= e($i['id']) ?>" <?= $valores['instrutor_id'] === $i['id'] ? 'selected' : '' ?>><?= e($i['nome_completo']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+            <div class="form-field"><label>Imagem<?= $editando ? ' (deixe em branco pra manter a atual)' : '' ?></label><input type="file" name="imagem" accept="image/*" <?= $editando ? '' : 'required' ?> /></div>
+            <div class="form-field"><label>Descrição</label><input type="text" name="descricao" value="<?= e($valores['descricao']) ?>" /></div>
+            <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.5rem;">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <a class="btn btn-outline-dark" href="turmas.php">Cancelar</a>
+            </div>
+        </form>
+    </div>
 </div>
 
 <?php equipe_footer_html(); ?>
