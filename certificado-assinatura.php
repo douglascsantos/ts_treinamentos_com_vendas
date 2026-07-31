@@ -18,7 +18,12 @@ require __DIR__ . '/includes/assinaturas.php';
 $codigo = $_GET['codigo'] ?? '';
 $papel = $_GET['papel'] ?? '';
 
-$certificado = $codigo !== '' ? find_certificado_by_codigo($codigo) : null;
+try {
+    $certificado = $codigo !== '' ? find_certificado_by_codigo($codigo) : null;
+} catch (Throwable $e) {
+    http_response_code(404);
+    exit;
+}
 if (!$certificado || !in_array($papel, ['instrutor', 'administrativo'], true)) {
     http_response_code(404);
     exit;

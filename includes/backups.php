@@ -44,13 +44,15 @@ function gerar_backup_banco_zip(): string
     $tmpSql = tempnam(sys_get_temp_dir(), 'ts_db_');
     file_put_contents($tmpSql, $sql);
 
-    $caminhoZip = sys_get_temp_dir() . '/backup-banco-' . date('Y-m-d_His') . '.zip';
-    $zip = new ZipArchive();
-    $zip->open($caminhoZip, ZipArchive::CREATE | ZipArchive::OVERWRITE);
-    $zip->addFile($tmpSql, 'backup-banco-' . date('Y-m-d') . '.sql');
-    $zip->close();
-
-    @unlink($tmpSql);
+    try {
+        $caminhoZip = sys_get_temp_dir() . '/backup-banco-' . date('Y-m-d_His') . '.zip';
+        $zip = new ZipArchive();
+        $zip->open($caminhoZip, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        $zip->addFile($tmpSql, 'backup-banco-' . date('Y-m-d') . '.sql');
+        $zip->close();
+    } finally {
+        @unlink($tmpSql);
+    }
     return $caminhoZip;
 }
 

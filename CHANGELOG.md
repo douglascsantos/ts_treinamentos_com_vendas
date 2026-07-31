@@ -362,3 +362,14 @@ administrativo conclui a turma → diploma é gerado e verificável publicamente
   function storage_path()" assim que os dois caminhos se cruzavam na mesma requisição. Pego pelo
   teste local (`php -S`) rodado antes do deploy, nunca chegou a subir pro ar; corrigido trocando
   todo `require` de `storage.php` no projeto por `require_once`.
+
+## v2.3.1 — "Nova" — 2026-07-31
+
+Dois achados não-bloqueantes do `deploy-check` na v2.3.0, corrigidos em seguida.
+
+- `certificado-assinatura.php` não tinha o mesmo `try/catch` em volta da consulta ao banco que
+  `certificado.php`/`minha-conta.php` já usam — se o banco estivesse fora do ar, em vez do 404
+  normal a página quebrava com erro não tratado. Agora cai no mesmo 404 gracioso dos outros casos.
+- `gerar_backup_banco_zip()` (`includes/backups.php`) só apagava o `.sql` temporário no caminho de
+  sucesso — se o `ZipArchive` falhasse no meio, o arquivo temporário ficava perdido na pasta temp do
+  servidor. Envolvido num `try/finally` pra sempre limpar, dê certo ou não.
