@@ -1,0 +1,22 @@
+# TS Treinamentos em Saúde — URLs limpas (sem ".php" visível) em todo o site.
+# Duas regras: (1) quem digitar/clicar num link com ".php" é redirecionado pra
+# versão sem extensão (o que aparece na barra de endereço); (2) a versão sem
+# extensão serve o arquivo .php de verdade por trás dos panos. Nunca afeta
+# POST (formulários, checkout, webhook da InfinitePay) — só GET é redirecionado,
+# então nenhum formulário perde dados por causa disso.
+
+RewriteEngine On
+RewriteBase /
+
+# 1) Canonicaliza: GET /pagina.php -> redireciona pra GET /pagina (301, preserva query string)
+RewriteCond %{REQUEST_METHOD} GET
+RewriteCond %{THE_REQUEST} \s/+(.+)\.php[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L]
+
+# 2) Serve de verdade: GET /pagina -> internamente entrega pagina.php (sem mudar a URL visível)
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+)$ $1.php [L]
+
+# Sem listagem de diretório pra quem acessar uma pasta sem index (assets/, cursos/ etc.)
+Options -Indexes

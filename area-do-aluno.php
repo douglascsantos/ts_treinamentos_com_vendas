@@ -9,6 +9,9 @@ require __DIR__ . '/includes/storage.php';
 require __DIR__ . '/includes/alunos.php';
 require __DIR__ . '/includes/pedidos.php';
 require __DIR__ . '/includes/env.php';
+require __DIR__ . '/includes/db.php';
+require __DIR__ . '/includes/administradores.php';
+require __DIR__ . '/includes/instrutores.php';
 require __DIR__ . '/includes/csrf.php';
 require __DIR__ . '/includes/google_oauth.php';
 csrf_ensure_session();
@@ -19,6 +22,16 @@ $version = require __DIR__ . '/includes/version.php';
 // order_nsu chega por GET (link de pagamento-concluido.php) ou continua vindo
 // junto no POST do form (campo oculto), pra sobreviver ao ciclo de validação.
 $orderNsu = $_POST['order_nsu'] ?? $_GET['order_nsu'] ?? '';
+
+// Já logado como equipe (diretor/administrativo/instrutor) e caiu aqui por engano —
+// manda direto pro painel certo em vez de mostrar o formulário de aluno.
+if (!empty($_SESSION['staff_tipo'])) {
+    $painel = $_SESSION['staff_nivel'] === 'diretor'
+        ? 'equipe/diretor.php'
+        : ($_SESSION['staff_tipo'] === 'instrutor' ? 'equipe/instrutor.php' : 'equipe/administrativo.php');
+    header('Location: ' . $painel);
+    exit;
+}
 
 if (!empty($_SESSION['aluno_id'])) {
     if ($orderNsu !== '') {
@@ -49,6 +62,40 @@ if ($acao === 'login') {
                 vincular_pedido_aluno($orderNsu, $aluno['id']);
             }
             header('Location: minha-conta.php');
+            exit;
+        }
+
+        // Não é aluno — antes de dar erro, confere se é login da equipe (diretor/
+        // administrativo/instrutor), pra não obrigar quem já sabe a senha certa
+        // a saber de cor a URL separada do painel interno.
+        $equipeRedirect = null;
+        try {
+            $admin = ($email !== '' && $senha !== '') ? verificar_login_administrador($email, $senha) : null;
+            if ($admin) {
+                session_regenerate_id(true);
+                $_SESSION['staff_tipo'] = 'administrador';
+                $_SESSION['staff_id'] = $admin['id'];
+                $_SESSION['staff_nivel'] = $admin['nivel'];
+                $_SESSION['staff_nome'] = $admin['nome'];
+                $equipeRedirect = $admin['nivel'] === 'diretor' ? 'equipe/diretor.php' : 'equipe/administrativo.php';
+            } else {
+                $instrutor = ($email !== '' && $senha !== '') ? verificar_login_instrutor($email, $senha) : null;
+                if ($instrutor) {
+                    session_regenerate_id(true);
+                    $_SESSION['staff_tipo'] = 'instrutor';
+                    $_SESSION['staff_id'] = $instrutor['id'];
+                    $_SESSION['staff_nivel'] = null;
+                    $_SESSION['staff_nome'] = $instrutor['nome_completo'];
+                    $equipeRedirect = 'equipe/instrutor.php';
+                }
+            }
+        } catch (Throwable $e) {
+            // Banco fora do ar: segue como se não fosse conta de equipe, mostra
+            // o erro genérico de aluno abaixo em vez de quebrar a página.
+        }
+
+        if ($equipeRedirect) {
+            header('Location: ' . $equipeRedirect);
             exit;
         }
 

@@ -233,3 +233,19 @@ Correção crítica de mobile (canal principal de vendas) + novo processo de qua
   silencioso do `body`, prefixos de navegador, alvos de toque, z-index). A partir de agora, todo
   deploy passa primeiro por esse agente — só chama o `deploy-check` depois de um veredito GO
   (regra permanente, salva em memória por pedido explícito do cliente).
+
+## v2.1.1 — "Iaris" — 2026-07-31
+
+Duas melhorias pedidas pelo cliente: acesso mais fácil pra equipe e URLs mais limpas.
+
+- **Login unificado**: entrar em `area-do-aluno.php` com e-mail/senha de diretor, administrativo
+  ou instrutor agora redireciona automaticamente pro painel certo (`equipe/diretor.php`,
+  `administrativo.php` ou `instrutor.php`) — não precisa mais saber de cor a URL separada
+  `equipe/login.php`. Se já estiver logado como equipe e cair em `area-do-aluno.php` de novo,
+  também redireciona direto, sem pedir login de novo. Falha de conexão com o banco (ex.: fora do
+  ar) cai graciosamente pro erro normal de aluno em vez de quebrar a página.
+- **URLs sem `.php`** (`.htaccess`, novo): todo o site agora responde por URLs limpas
+  (`/equipe/login` em vez de `/equipe/login.php`) — quem acessar a versão com `.php` é
+  redirecionado (301) pra versão limpa automaticamente, sem precisar mudar nenhum link existente
+  no código. Só afeta GET (navegação) — formulários, checkout e o webhook da InfinitePay
+  continuam funcionando exatamente igual, nunca são redirecionados.

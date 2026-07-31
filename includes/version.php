@@ -18,7 +18,7 @@
 return [
     'brand'      => 'TS Treinamentos',
     'year'       => date('Y'),
-    'version'    => '2.1.0',
+    'version'    => '2.1.1',
     'codename'   => 'Iaris',
     'stage'      => 'production',
     'updated_at' => '2026-07-31',
