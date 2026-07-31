@@ -1,1 +1,29 @@
-[]
+[
+  {
+    "slug": "anotacao-de-enfermagem",
+    "nome": "Anotação de Enfermagem",
+    "tipo": "book",
+    "preco": 19.9,
+    "estoque": 9999,
+    "imagem": "anotacao-de-enfermagem.jpg",
+    "descricao": ""
+  },
+  {
+    "slug": "guia-de-medicamentos",
+    "nome": "Guia de Medicamentos",
+    "tipo": "book",
+    "preco": 19.9,
+    "estoque": 9999,
+    "imagem": "guia-de-medicamentos.jpg",
+    "descricao": ""
+  },
+  {
+    "slug": "hipodermoclise-na-pratica",
+    "nome": "Hipodermóclise na Prática",
+    "tipo": "book",
+    "preco": 19.9,
+    "estoque": 9999,
+    "imagem": "hipodermoclise-na-pratica.jpg",
+    "descricao": ""
+  }
+]

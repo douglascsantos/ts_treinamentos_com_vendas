@@ -4,8 +4,11 @@
 const PRODUTO_TIPO_LABELS = [
     'card' => 'Card',
     'kit'  => 'Kit de treinamento',
-    'book' => 'Book',
+    'book' => 'Book (e-book em PDF)',
 ];
+
+/** Tipos de produto que são entregues digitalmente (PDF) e por isso nunca esgotam. */
+const PRODUTO_TIPOS_DIGITAIS = ['book'];
 
 /** Carrega os produtos, mais recentes primeiro. */
 function load_produtos(): array
@@ -35,9 +38,14 @@ function find_produto(string $slug): ?array
     return null;
 }
 
-/** [label, classe css] para o status de estoque do produto. */
-function produto_status(int $estoque): array
+/** [label, classe css] para o status de estoque do produto.
+ *  Produtos digitais (ver PRODUTO_TIPOS_DIGITAIS) ignoram o estoque —
+ *  um e-book/PDF nunca "esgota". */
+function produto_status(int $estoque, string $tipo = ''): array
 {
+    if (produto_e_digital($tipo)) {
+        return ['Disponível', 'status-open'];
+    }
     if ($estoque <= 0) {
         return ['Esgotado', 'status-out'];
     }
@@ -51,4 +59,10 @@ function produto_status(int $estoque): array
 function produto_tipo_label(string $tipo): string
 {
     return PRODUTO_TIPO_LABELS[$tipo] ?? ucfirst($tipo);
+}
+
+/** Produto de entrega digital (PDF) — nunca esgota, não usa estoque físico. */
+function produto_e_digital(string $tipo): bool
+{
+    return in_array($tipo, PRODUTO_TIPOS_DIGITAIS, true);
 }

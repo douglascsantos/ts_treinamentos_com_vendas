@@ -2,6 +2,8 @@
 
 Versionamento: `PROTOTIPO.MACRO.MICRO` (ver comentário em `includes/version.php`).
 A versão exibida no rodapé do site vem sempre desse arquivo — atualize-o a cada entrada nova aqui.
+Ordem cronológica: mais antiga no topo, mais recente no final do arquivo — sempre adicione a
+entrada nova no FINAL, não no início.
 
 ## v0.0.0 — "Aurora" — 2026-07-29
 
@@ -84,3 +86,32 @@ ver `includes/version.php`). O rótulo "Protótipo" foi removido do rodapé.
   `includes/turmas.php`), agora compartilhado entre turmas e produtos.
 - `deploy-check` atualizado: escopo agora cobre `produtos/` e `data/produtos.json`, removida a
   checagem específica de segurança do token do Instagram (não existe mais nesse código).
+
+## v1.0.1 — "Avelã" — 2026-07-30
+
+Catálogo de produtos ganha conteúdo real e agente próprio. `stage` do rodapé passa a
+`production` (explícito), saindo do `''`/sem-rótulo da v1.0.0.
+
+- **Agente `produtos-sync`** (`.claude/agents/produtos-sync.md`) criado, espelhando o
+  `agenda-sync`: lê `produtos_ts_site/` (pasta local, fora do git), processa as imagens e
+  atualiza `data/produtos.json` + `produtos/{slug}.php`.
+- **`tools/sync_produtos.py`** criado, com **três** formatos de nome de arquivo suportados:
+  `produto NOME tipo TIPO valor PRECO estoque QTD.ext` (card/kit físicos), a variante sem
+  `estoque` para `book` (e-book em PDF — nunca esgota), e `ebook_online_NOME_valorPRECO.ext`
+  (nome "colado" em camelCase, sem espaços — formato realmente usado no dia a dia).
+- **`tools/sync_common.py`** criado: funções que antes só existiam em `sync_agenda.py`
+  (`slugify`, `parse_price`, `process_image`, correção de acentos) agora são compartilhadas
+  entre `sync_agenda.py` e `sync_produtos.py`. `sync_agenda.py` foi refatorado para usar esse
+  módulo — comportamento e resultado confirmados idênticos após o refatoramento.
+- **Confirmado com o cliente**: produtos do tipo `book` são e-books entregues em PDF após a
+  compra — nunca têm estoque físico. `includes/produtos.php` (`produto_status()`,
+  `produto_e_digital()`) e `includes/produto-page.php` já tratam isso: status sempre
+  "Disponível", campo de estoque substituído por "Formato: E-book em PDF" na página do produto,
+  e um aviso de entrega digital no lugar da nota de pagamento manual.
+- **3 produtos reais publicados** (primeiros do catálogo): *Anotação de Enfermagem*, *Guia de
+  Medicamentos* e *Hipodermóclise na Prática* — todos e-books.
+- Item "Produtos" adicionado ao menu principal (`includes/header.php`, desktop e mobile),
+  apontando para `#produtos` — estava de propósito ausente enquanto o catálogo estava vazio.
+- `produtos_ts_site/PRODUTOS_README.md` criado documentando os formatos de nome aceitos.
+- `ROADMAP.md` atualizado: item "Agente de produtos" removido (concluído).
+- `deploy-check` atualizado para o novo estado do catálogo de produtos.

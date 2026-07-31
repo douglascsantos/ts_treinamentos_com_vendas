@@ -108,7 +108,7 @@ include __DIR__ . '/includes/header.php';
     </div>
     <div class="produtos-scroll" role="list">
         <?php foreach ($produtos as $p):
-            [$statusLabel, $statusClass] = produto_status((int) $p['estoque']);
+            [$statusLabel, $statusClass] = produto_status((int) $p['estoque'], $p['tipo']);
             $paginaProduto = 'produtos/' . $p['slug'] . '.php';
         ?>
             <a class="produto-item" role="listitem" href="<?= e($paginaProduto) ?>">

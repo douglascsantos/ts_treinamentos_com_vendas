@@ -21,8 +21,9 @@ function render_produto_page(string $slug): void
         return;
     }
 
-    [$statusLabel, $statusClass] = produto_status((int) $produto['estoque']);
-    $esgotado = (int) $produto['estoque'] <= 0;
+    $digital = produto_e_digital($produto['tipo']);
+    [$statusLabel, $statusClass] = produto_status((int) $produto['estoque'], $produto['tipo']);
+    $esgotado = !$digital && (int) $produto['estoque'] <= 0;
     $precoFormatado = format_price((float) $produto['preco']);
     $waMsg = 'Olá! Quero comprar o produto "' . $produto['nome'] . '".';
     $waLink = wa_link($config['whatsapp'], $waMsg);
@@ -47,7 +48,11 @@ function render_produto_page(string $slug): void
 
                 <dl class="curso-meta">
                     <div><dt>💰 Preço</dt><dd class="curso-price-big"><?= e($precoFormatado) ?></dd></div>
-                    <div><dt>📦 Estoque</dt><dd><?= (int) $produto['estoque'] ?> unidade(s)</dd></div>
+                    <?php if ($digital): ?>
+                        <div><dt>📄 Formato</dt><dd>E-book em PDF</dd></div>
+                    <?php else: ?>
+                        <div><dt>📦 Estoque</dt><dd><?= (int) $produto['estoque'] ?> unidade(s)</dd></div>
+                    <?php endif; ?>
                 </dl>
 
                 <?php if ($esgotado): ?>
@@ -55,7 +60,11 @@ function render_produto_page(string $slug): void
                 <?php else: ?>
                     <a class="btn btn-accent btn-lg btn-block" href="<?= e($waLink) ?>" target="_blank" rel="noopener">Comprar pelo WhatsApp</a>
                 <?php endif; ?>
-                <p class="curso-note">Pagamento combinado direto com a equipe — em breve com checkout no site.</p>
+                <?php if ($digital): ?>
+                    <p class="curso-note">Produto digital: você recebe o PDF por e-mail/WhatsApp assim que o pagamento for confirmado.</p>
+                <?php else: ?>
+                    <p class="curso-note">Pagamento combinado direto com a equipe — em breve com checkout no site.</p>
+                <?php endif; ?>
                 <p class="curso-back"><a href="../index.php#produtos">← Ver todos os produtos</a></p>
             </div>
         </div>

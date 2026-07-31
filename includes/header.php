@@ -42,6 +42,7 @@ $description = $page_description ?? 'Cursos práticos e certificados para enferm
                 <li><a href="<?= e($base_path) ?>index.php#inicio">Início</a></li>
                 <li><a href="<?= e($base_path) ?>index.php#agenda">Cursos</a></li>
                 <li><a href="<?= e($base_path) ?>index.php#agenda">Agenda</a></li>
+                <li><a href="<?= e($base_path) ?>index.php#produtos">Produtos</a></li>
                 <li><a href="<?= e($base_path) ?>index.php#contato">Contato</a></li>
                 <li><a href="#" class="menu-disabled" aria-disabled="true" title="Em breve">Área do Aluno</a></li>
             </ul>
@@ -57,6 +58,7 @@ $description = $page_description ?? 'Cursos práticos e certificados para enferm
             <li><a href="<?= e($base_path) ?>index.php#inicio">Início</a></li>
             <li><a href="<?= e($base_path) ?>index.php#agenda">Cursos</a></li>
             <li><a href="<?= e($base_path) ?>index.php#agenda">Agenda</a></li>
+            <li><a href="<?= e($base_path) ?>index.php#produtos">Produtos</a></li>
             <li><a href="<?= e($base_path) ?>index.php#contato">Contato</a></li>
             <li><a href="#" class="menu-disabled" aria-disabled="true">Área do Aluno <span class="soon">em breve</span></a></li>
         </ul>

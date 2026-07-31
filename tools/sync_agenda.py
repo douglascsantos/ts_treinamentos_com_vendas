@@ -26,14 +26,18 @@ from __future__ import annotations
 import json
 import re
 import sys
-import unicodedata
 from datetime import datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 try:
-    from PIL import Image
-except ImportError:
-    print("ERRO: Pillow não está instalado. Rode: python -m pip install Pillow")
+    from sync_common import (
+        IMAGE_EXTS, find_image, parse_dados_txt, parse_price, process_image,
+        slugify, titlecase_pt,
+    )
+except ImportError as exc:
+    print(f"ERRO: dependência ausente ({exc}). Rode: python -m pip install Pillow")
     sys.exit(1)
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -41,91 +45,11 @@ AGENDA_DIR = ROOT / "agenda"
 DATA_FILE = ROOT / "data" / "turmas.json"
 IMAGES_DIR = ROOT / "assets" / "images" / "cursos"
 CURSOS_DIR = ROOT / "cursos"
-IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
-TARGET_SIZE = (900, 675)  # 4:3, mesma proporção usada no card e na página do curso
 DEFAULT_LOCAL = "Presencial · São José do Rio Preto"
 DEFAULT_STATUS = "aberta"
 VALID_STATUS = {"aberta", "ultimas", "esgotada"}
 
 DRY_RUN = "--dry-run" in sys.argv
-
-# Dicionário de correção de acentos para palavras comuns nos nomes de curso.
-# Nomes de arquivo costumam vir sem acento (limitação do sistema de arquivos/
-# do jeito que foram salvos) — isso tenta reconstituir a grafia correta para
-# as palavras mais usadas nesse tipo de curso. Não é perfeito: revise o nome
-# final em data/turmas.json se alguma palavra não constar aqui.
-WORD_FIXES = {
-    "administracao": "Administração", "medicamentos": "Medicamentos",
-    "injetaveis": "Injetáveis", "puncao": "Punção", "venosa": "Venosa",
-    "coleta": "Coleta", "sangue": "Sangue", "avaliacao": "Avaliação",
-    "feridas": "Feridas", "curativos": "Curativos", "diluicoes": "Diluições",
-    "preparacoes": "Preparações", "furo": "Furo", "humanizado": "Humanizado",
-    "plantao": "Plantão", "medo": "Medo", "rotinas": "Rotinas",
-    "hospitalares": "Hospitalares", "eletrocardiograma": "Eletrocardiograma",
-    "monitorizacao": "Monitorização", "oxigenioterapia": "Oxigenioterapia",
-    "traqueostomia": "Traqueostomia", "sondagem": "Sondagem",
-    "vesical": "Vesical", "enteral": "Enteral", "acesso": "Acesso",
-    "vascular": "Vascular", "perfuracao": "Perfuração",
-    "reforco": "Reforço", "escolar": "Escolar", "processo": "Processo",
-    "seletivo": "Seletivo", "hospitais": "Hospitais", "provas": "Provas",
-    "urgencia": "Urgência", "emergencia": "Emergência", "cateter": "Cateter",
-    "central": "Central", "hipodermoclise": "Hipodermóclise",
-}
-MINOR_WORDS = {"de", "da", "do", "das", "dos", "e", "em", "com", "para", "a", "o", "no", "na"}
-
-
-def fix_word(word: str) -> str:
-    key = word.lower()
-    if key in WORD_FIXES:
-        return WORD_FIXES[key]
-    if key in MINOR_WORDS:
-        return key
-    return key.capitalize()
-
-
-def titlecase_pt(text: str) -> str:
-    words = text.split()
-    out = [fix_word(w) for w in words]
-    if out:
-        out[0] = out[0][0].upper() + out[0][1:] if out[0] else out[0]
-    return " ".join(out)
-
-
-def slugify(text: str) -> str:
-    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
-    text = text.lower().strip()
-    text = re.sub(r"[^a-z0-9]+", "-", text)
-    return text.strip("-")
-
-
-def parse_price(raw: str) -> float:
-    s = raw.strip().replace("R$", "").strip()
-    if "," in s and s.rfind(",") > s.rfind("."):
-        s = s.replace(".", "").replace(",", ".")
-    else:
-        s = s.replace(",", "")
-    return float(s)
-
-
-def process_image(src: Path, dest: Path) -> None:
-    img = Image.open(src).convert("RGB")
-    src_w, src_h = img.size
-    target_ratio = TARGET_SIZE[0] / TARGET_SIZE[1]
-    src_ratio = src_w / src_h
-
-    if src_ratio > target_ratio:
-        new_w = int(src_h * target_ratio)
-        left = (src_w - new_w) // 2
-        img = img.crop((left, 0, left + new_w, src_h))
-    else:
-        new_h = int(src_w / target_ratio)
-        top = (src_h - new_h) // 2
-        img = img.crop((0, top, src_w, top + new_h))
-
-    img = img.resize(TARGET_SIZE, Image.LANCZOS)
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    img.save(dest, "JPEG", quality=85, optimize=True)
-
 
 CURSO_PAGE_TEMPLATE = """<?php
 require __DIR__ . '/../includes/functions.php';
@@ -171,24 +95,6 @@ def parse_filename(path: Path) -> dict | None:
         "horario": horario,
         "preco": preco,
     }
-
-
-def find_image(folder: Path) -> Path | None:
-    for f in sorted(folder.iterdir()):
-        if f.suffix.lower() in IMAGE_EXTS:
-            return f
-    return None
-
-
-def parse_dados_txt(path: Path) -> dict:
-    fields: dict[str, str] = {}
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or ":" not in line:
-            continue
-        key, value = line.split(":", 1)
-        fields[key.strip().lower()] = value.strip()
-    return fields
 
 
 def load_existing_turmas() -> list[dict]:

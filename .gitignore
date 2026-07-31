@@ -7,3 +7,4 @@ prototipagem_stitch/
 secret.env
 agenda/
 produtos_ts_site/
+__pycache__/
