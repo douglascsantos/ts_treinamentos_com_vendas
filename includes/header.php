@@ -62,22 +62,26 @@ $alunoLogadoHeader = !empty($_SESSION['aluno_id']) ? find_aluno_by_id($_SESSION[
             <span></span><span></span><span></span>
         </button>
     </div>
-
-    <div class="mobile-nav" id="mobile-nav" hidden>
-        <ul>
-            <li><a href="<?= e($base_path) ?>index.php#inicio">Início</a></li>
-            <li><a href="<?= e($base_path) ?>index.php#agenda">Cursos</a></li>
-            <li><a href="<?= e($base_path) ?>index.php#agenda">Agenda</a></li>
-            <li><a href="<?= e($base_path) ?>index.php#produtos">Produtos</a></li>
-            <li><a href="<?= e($base_path) ?>index.php#contato">Contato</a></li>
-            <?php if ($alunoLogadoHeader): ?>
-                <li><a href="<?= e($base_path) ?>meus-dados.php" class="nav-aluno-logado">Bem-vindo, <?= e(primeiro_nome($alunoLogadoHeader['nome'])) ?></a></li>
-            <?php else: ?>
-                <li><a href="<?= e($base_path) ?>area-do-aluno.php">Área do Aluno</a></li>
-            <?php endif; ?>
-        </ul>
-    </div>
 </header>
+
+<!-- Fora do <header>: backdrop-filter no .site-header cria um novo containing
+     block pra descendentes position:fixed (comportamento do CSS), o que
+     encolhia esse menu pra caber na altura do cabeçalho em vez da tela
+     inteira. Como elemento irmão, volta a se posicionar em relação à viewport. -->
+<div class="mobile-nav" id="mobile-nav" hidden>
+    <ul>
+        <li><a href="<?= e($base_path) ?>index.php#inicio">Início</a></li>
+        <li><a href="<?= e($base_path) ?>index.php#agenda">Cursos</a></li>
+        <li><a href="<?= e($base_path) ?>index.php#agenda">Agenda</a></li>
+        <li><a href="<?= e($base_path) ?>index.php#produtos">Produtos</a></li>
+        <li><a href="<?= e($base_path) ?>index.php#contato">Contato</a></li>
+        <?php if ($alunoLogadoHeader): ?>
+            <li><a href="<?= e($base_path) ?>meus-dados.php" class="nav-aluno-logado">Bem-vindo, <?= e(primeiro_nome($alunoLogadoHeader['nome'])) ?></a></li>
+        <?php else: ?>
+            <li><a href="<?= e($base_path) ?>area-do-aluno.php">Área do Aluno</a></li>
+        <?php endif; ?>
+    </ul>
+</div>
 <div class="mobile-nav-overlay" id="mobile-nav-overlay" hidden></div>
 
 <main id="main">

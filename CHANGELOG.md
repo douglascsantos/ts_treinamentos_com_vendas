@@ -211,3 +211,25 @@ confirmado funcionando em produção.
 - Removida a mensagem de diagnóstico detalhada de `equipe/login.php` (mostrava o erro técnico na
   tela — era intencional e temporário, só pra eu conseguir ver a causa sem acesso ao log do
   servidor). Volta a mostrar "Erro ao conectar. Tente novamente em instantes." — genérico, seguro.
+
+## v2.1.0 — "Iaris" — 2026-07-31
+
+Correção crítica de mobile (canal principal de vendas) + novo processo de qualidade.
+
+- **Bug real, regressão do v2.0.1**: `.mobile-nav` (o menu-gaveta do celular) vivia dentro do
+  `<header>`, e o `<header>` ganhou `backdrop-filter` no v2.0.1 (correção do cabeçalho
+  transparente). `backdrop-filter`/`transform`/`filter` num elemento cria um novo "containing
+  block" pra descendentes `position: fixed` — o menu parou de se posicionar em relação à tela e
+  passou a se posicionar em relação à altura pequena do cabeçalho, encolhendo pra uma caixinha com
+  o conteúdo vazando por cima do hero. Corrigido movendo `.mobile-nav` pra fora do `<header>`
+  (`includes/header.php`), como irmão do `.mobile-nav-overlay` (que já estava certo). Confirmado
+  via captura de tela real do cliente no celular.
+- `.badge` (selo "Certificação reconhecida" no hero) também usava `backdrop-filter` sem o prefixo
+  `-webkit-`, mesma classe de problema do v2.0.1 — corrigido por consistência.
+- `[hidden]` agora tem `display: none !important` pra `.mobile-nav`/`.mobile-nav-overlay` —
+  reforço contra qualquer futuro conflito de especificidade que module o atributo `hidden`.
+- **Novo agente `.claude/agents/design-mobile-first.md`**: audita qualidade visual/UX antes de
+  todo deploy, com checklist específico pra essa classe de bug (containing block, overflow-x
+  silencioso do `body`, prefixos de navegador, alvos de toque, z-index). A partir de agora, todo
+  deploy passa primeiro por esse agente — só chama o `deploy-check` depois de um veredito GO
+  (regra permanente, salva em memória por pedido explícito do cliente).
