@@ -80,8 +80,15 @@ button { font: inherit; cursor: pointer; }
 /* Header */
 .site-header {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(255,255,255,.92); backdrop-filter: blur(8px);
+  background: rgba(255,255,255,.92);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border-bottom: 1px solid rgba(226,231,238,.7);
+}
+/* Navegadores sem suporte a backdrop-filter (nenhum dos dois prefixos): cabeçalho
+   sólido em vez de semi-transparente sem desfoque (ficaria "vazado" por cima do hero). */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .site-header { background: #ffffff; }
 }
 .header-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
 @media (min-width: 768px) { .header-inner { height: 80px; } }

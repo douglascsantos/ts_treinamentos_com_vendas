@@ -170,3 +170,13 @@ instrutor) com login próprio.
   re-sincronizar (não sobrescreve mais o que o painel administrativo editou).
 - `tools/sync_produtos.py` ganhou suporte a vincular PDF de e-book solto em `produtos_ts_site/`
   ao produto correspondente, renomeando e movendo pra fora do repositório.
+
+## v2.0.1 — "Star" — 2026-07-31
+
+Correção reportada pelo cliente: cabeçalho aparecendo transparente/desalinhado.
+
+- `.site-header` usava `backdrop-filter: blur(8px)` sem o prefixo `-webkit-backdrop-filter` —
+  Safari (iOS/Mac) ignora a versão sem prefixo, então o desfoque não era aplicado e sobrava só o
+  fundo semi-transparente (`rgba(255,255,255,.92)`), deixando o conteúdo por trás "vazar" através
+  do cabeçalho. Adicionado o prefixo, mais um fallback `@supports` pra fundo sólido em navegadores
+  sem suporte a nenhuma das duas versões (nunca mais fica transparente demais).
