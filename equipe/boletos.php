@@ -8,7 +8,7 @@ require __DIR__ . '/../includes/functions.php';
 require __DIR__ . '/../includes/env.php';
 require __DIR__ . '/../includes/db.php';
 require __DIR__ . '/../includes/administradores.php';
-require __DIR__ . '/../includes/storage.php';
+require_once __DIR__ . '/../includes/storage.php';
 require __DIR__ . '/../includes/alunos.php';
 require __DIR__ . '/../includes/pedidos.php';
 require __DIR__ . '/../includes/boletos.php';

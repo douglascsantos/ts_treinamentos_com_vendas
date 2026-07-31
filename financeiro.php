@@ -5,7 +5,7 @@
  * download (ícone vermelho/X); pago fica verde/check (ver includes/boletos.php).
  */
 require __DIR__ . '/includes/functions.php';
-require __DIR__ . '/includes/storage.php';
+require_once __DIR__ . '/includes/storage.php';
 require __DIR__ . '/includes/alunos.php';
 require __DIR__ . '/includes/env.php';
 require __DIR__ . '/includes/db.php';

@@ -2,6 +2,7 @@
 require __DIR__ . '/includes/functions.php';
 require __DIR__ . '/includes/turmas.php';
 require __DIR__ . '/includes/produtos.php';
+require __DIR__ . '/includes/agenda-imagens.php';
 $config  = require __DIR__ . '/includes/config.php';
 $version = require __DIR__ . '/includes/version.php';
 
@@ -14,12 +15,13 @@ $turmas = array_values(array_filter(load_turmas(), 'turma_ativa'));
 
 /**
  * Produtos TS Treinamentos (cards, kits de treinamento, books) — vem de
- * data/produtos.json. Ainda vazio: o conteúdo é preparado em produtos_ts_site/
- * (pasta local, fora do git) e publicado por um agente de sincronização
- * dedicado (a construir — ver ROADMAP.md). A seção só aparece quando houver
- * produtos cadastrados.
+ * data/produtos.json, gerenciados em equipe/produtos.php. Sem nenhum produto
+ * ativo, a seção mostra o aviso "Em atualização" (ver placeholder_em_atualizacao()).
  */
-$produtos = load_produtos();
+$produtos = array_values(array_filter(load_produtos(), 'produto_ativo'));
+
+/** Imagens de destaque da Agenda (equipe/agenda.php) — até 3, uma abaixo da outra. */
+$imagensAgenda = agenda_imagens_ativas();
 
 include __DIR__ . '/includes/header.php';
 ?>
@@ -62,13 +64,20 @@ include __DIR__ . '/includes/header.php';
             <p class="muted">Garanta sua vaga com antecedência. As turmas são reduzidas para máxima qualidade prática.</p>
         </div>
 
-        <div class="agenda-overview">
-            <a href="assets/images/agenda-geral-ago-set-2026.jpg" target="_blank" rel="noopener">
-                <img src="assets/images/agenda-geral-ago-set-2026.jpg" alt="Visão geral da agenda de cursos — Agosto e Setembro de 2026" loading="lazy" />
-            </a>
-            <p class="agenda-overview-caption">Visão geral da agenda de Agosto e Setembro — toque na imagem para ampliar</p>
-        </div>
+        <?php if ($imagensAgenda): ?>
+            <?php foreach ($imagensAgenda as $img): ?>
+                <div class="agenda-overview">
+                    <a href="assets/images/agenda-destaques/<?= e($img['arquivo']) ?>" target="_blank" rel="noopener">
+                        <img src="assets/images/agenda-destaques/<?= e($img['arquivo']) ?>" alt="<?= e($img['legenda']) ?>" loading="lazy" />
+                    </a>
+                    <p class="agenda-overview-caption"><?= e($img['legenda']) ?> — toque na imagem para ampliar</p>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
 
+        <?php if (!$turmas): ?>
+            <?php placeholder_em_atualizacao('', 'Em atualização — em breve teremos novas turmas na agenda.'); ?>
+        <?php else: ?>
         <div class="course-grid">
             <?php foreach ($turmas as $t):
                 [$label, $statusClass] = turma_status($t['status']);
@@ -95,6 +104,7 @@ include __DIR__ . '/includes/header.php';
             </article>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
 
         <div class="schedule-cta">
             <a class="btn btn-accent btn-lg" href="<?= e(wa_link($config['whatsapp'], 'Olá! Quero reservar minha vaga.')) ?>" target="_blank" rel="noopener">
@@ -104,7 +114,6 @@ include __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<?php if (!empty($produtos)): ?>
 <section id="produtos" class="section section-produtos">
     <div class="container">
         <div class="section-head">
@@ -113,6 +122,11 @@ include __DIR__ . '/includes/header.php';
             <p class="muted">Cards, kits de treinamento e books sobre cada tema, direto da nossa equipe.</p>
         </div>
     </div>
+    <?php if (!$produtos): ?>
+        <div class="container">
+            <?php placeholder_em_atualizacao('', 'Em atualização — em breve teremos novos produtos por aqui.'); ?>
+        </div>
+    <?php else: ?>
     <div class="produtos-scroll" role="list">
         <?php foreach ($produtos as $p):
             [$statusLabel, $statusClass] = produto_status((int) $p['estoque'], $p['tipo']);
@@ -129,8 +143,8 @@ include __DIR__ . '/includes/header.php';
             </a>
         <?php endforeach; ?>
     </div>
+    <?php endif; ?>
 </section>
-<?php endif; ?>
 
 <section id="sobre" class="section section-about">
     <div class="container about-grid">

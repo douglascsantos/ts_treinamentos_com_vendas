@@ -11,7 +11,7 @@
 require __DIR__ . '/includes/functions.php';
 require __DIR__ . '/includes/turmas.php';
 require __DIR__ . '/includes/produtos.php';
-require __DIR__ . '/includes/storage.php';
+require_once __DIR__ . '/includes/storage.php';
 require __DIR__ . '/includes/pedidos.php';
 require __DIR__ . '/includes/infinitepay.php';
 require __DIR__ . '/includes/env.php';
@@ -88,7 +88,7 @@ if ($tipo === 'curso') {
     $preco = (float) $item['preco'];
 } else {
     $item = find_produto($slug);
-    if (!$item) {
+    if (!$item || !produto_ativo($item)) {
         checkout_erro($config, 'Produto não encontrado', 'Esse produto pode não estar mais disponível.');
         exit;
     }

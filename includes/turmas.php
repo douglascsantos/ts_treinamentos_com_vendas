@@ -55,6 +55,45 @@ function turma_ativa(array $turma): bool
     return ($turma['ativo'] ?? true) !== false;
 }
 
+/** Turma concluída (diplomas já gerados) — não pode ser concluída de novo. */
+function turma_concluida(array $turma): bool
+{
+    return ($turma['concluida'] ?? false) === true;
+}
+
+/**
+ * Campos que uma turma precisa ter preenchidos antes de poder ser concluída
+ * (gerar diploma sem instrutor/administrativo responsável ou sem carga
+ * horária não faz sentido — ambos assinam o diploma, ver includes/certificados.php).
+ * Retorna a lista de campos faltando (vazia = pronta pra concluir).
+ */
+function turma_campos_faltando_para_concluir(array $turma): array
+{
+    $faltando = [];
+    if (empty($turma['curso'])) {
+        $faltando[] = 'Nome do curso';
+    }
+    if (empty($turma['datas'])) {
+        $faltando[] = 'Datas';
+    }
+    if (empty($turma['horario'])) {
+        $faltando[] = 'Horário';
+    }
+    if (empty($turma['carga_horaria'])) {
+        $faltando[] = 'Carga horária';
+    }
+    if (empty($turma['codigo_turma'])) {
+        $faltando[] = 'Código da turma';
+    }
+    if (empty($turma['instrutor_id'])) {
+        $faltando[] = 'Instrutor responsável';
+    }
+    if (empty($turma['administrativo_id'])) {
+        $faltando[] = 'Administrativo responsável';
+    }
+    return $faltando;
+}
+
 /** [label, classe css] para o status da turma. */
 function turma_status(string $status): array
 {

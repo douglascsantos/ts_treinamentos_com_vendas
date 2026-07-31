@@ -9,6 +9,7 @@ require __DIR__ . '/../includes/env.php';
 require __DIR__ . '/../includes/db.php';
 require __DIR__ . '/../includes/instrutores.php';
 require __DIR__ . '/../includes/assinaturas.php';
+require __DIR__ . '/../includes/turmas.php';
 require __DIR__ . '/../includes/csrf.php';
 require __DIR__ . '/../includes/equipe.php';
 
@@ -76,7 +77,32 @@ equipe_header_html('Painel do Instrutor', $staff['nome']);
 
 <div class="equipe-card">
     <h3>Minhas turmas</h3>
-    <p class="muted">Em construção — em breve aqui aparecem as turmas atribuídas a você, com a lista de alunos matriculados e o botão pra liberar certificado.</p>
+    <?php
+    $minhasTurmas = array_values(array_filter(load_turmas(), fn ($t) => ($t['instrutor_id'] ?? null) === $staff['id']));
+    ?>
+    <?php if (!$minhasTurmas): ?>
+        <p class="equipe-empty">Nenhuma turma atribuída a você ainda.</p>
+    <?php else: ?>
+        <div class="equipe-list">
+            <?php foreach ($minhasTurmas as $t): ?>
+                <a class="equipe-list-item" href="minha-turma.php?slug=<?= e($t['slug']) ?>" style="text-decoration:none;">
+                    <span class="equipe-list-link">
+                        <?= e($t['curso']) ?>
+                        <span class="equipe-list-meta"><?= e(turma_dates_full($t['datas'])) ?> às <?= e($t['horario']) ?></span>
+                    </span>
+                    <span class="equipe-list-actions">
+                        <?php if (turma_concluida($t)): ?>
+                            <span class="badge-ativo">Concluída</span>
+                        <?php elseif ($t['instrutor_finalizou'] ?? false): ?>
+                            <span class="badge-ativo">Finalizada por você</span>
+                        <?php else: ?>
+                            <span class="badge-inativo">Marcar presença/nota</span>
+                        <?php endif; ?>
+                    </span>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 </div>
 
 <?php equipe_footer_html(); ?>

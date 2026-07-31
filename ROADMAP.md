@@ -112,8 +112,9 @@ O que falta pra virar uma Área do Aluno completa (hoje é login + dados editáv
 pedidos com situação + contrato, sem dashboard pedagógico):
 - Parte financeira (boletos parcelados — ver item 3).
 - Histórico escolar e presenças.
-- Imprimir certificados (ver item 3, já tem pasta/convenção de nome prontas em
-  `includes/certificados.php`, falta a geração de PDF em si).
+- ✅ Certificados — resolvido na v2.3.0 (ver `minha-conta.php`, seção "Meus certificados", e
+  `certificado.php` pra verificação pública). Diploma renderizado como página HTML imprimível, sem
+  depender de biblioteca de PDF no servidor.
 - Assistir aulas disponíveis online (conteúdo em vídeo).
 - Download de e-book comprado.
 
@@ -186,12 +187,12 @@ modelo que já existe em `prototipagem_stitch/`).
 `status='pago'`, casado por `slug`.
 
 **O que falta pra fechar o CRM:**
-1. **Certificado de verdade** — ainda não construído: escolher biblioteca de geração de PDF
-   (hospedagem sem Composer), tela do instrutor pra liberar certificado (turmas atribuídas +
-   alunos matriculados), ação do diretor "finalizar turma" (gera certificado pra todos os alunos
-   pagos da turma de uma vez, com `diretor_id` do quem finalizou), e a página pública de
-   verificação por `numero_hash`/QR Code. Pasta e convenção de nome já prontas
-   (`includes/certificados.php`).
+1. ✅ **Certificado** — resolvido na v2.3.0: `equipe/minha-turma.php` (instrutor marca
+   presença/nota/observação e finaliza), `equipe/turmas.php` (administrativo conclui — checklist de
+   quem recebe diploma + observação interna — e gera os certificados de uma vez, com `diretor_id`
+   guardando o administrativo responsável escolhido no cadastro da turma), `certificado.php`
+   (verificação pública por `numero_hash`, sem QR Code de imagem por enquanto — só o código em
+   texto/link).
 2. Relatório de vendas no painel administrativo.
 3. Migrar `turmas`/`produtos`/`pedidos`/`alunos` de JSON pras tabelas MySQL já criadas.
 

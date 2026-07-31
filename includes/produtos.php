@@ -66,3 +66,50 @@ function produto_e_digital(string $tipo): bool
 {
     return in_array($tipo, PRODUTO_TIPOS_DIGITAIS, true);
 }
+
+/**
+ * Produto desabilitado pelo administrativo (nunca excluído — só marcado
+ * `ativo: false`) não aparece nem pode ser comprado no site público. Pedidos
+ * já feitos continuam mostrando os dados normalmente (mesmo princípio de
+ * turma_ativa() em includes/turmas.php).
+ */
+function produto_ativo(array $produto): bool
+{
+    return ($produto['ativo'] ?? true) !== false;
+}
+
+/**
+ * Escrita usada só pelo painel administrativo (equipe/produtos.php). O site
+ * público e o agente produtos-sync continuam só lendo via load_produtos()/find_produto().
+ */
+function save_produtos(array $produtos): void
+{
+    $path = __DIR__ . '/../data/produtos.json';
+    file_put_contents($path, json_encode(array_values($produtos), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n");
+}
+
+function criar_produto(array $dados): array
+{
+    $produtos = load_produtos();
+    $produtos[] = $dados;
+    save_produtos($produtos);
+    return $dados;
+}
+
+function atualizar_produto(string $slug, array $changes): ?array
+{
+    $produtos = load_produtos();
+    $atualizado = null;
+    foreach ($produtos as &$p) {
+        if ($p['slug'] === $slug) {
+            $p = array_merge($p, $changes);
+            $atualizado = $p;
+            break;
+        }
+    }
+    unset($p);
+    if ($atualizado) {
+        save_produtos($produtos);
+    }
+    return $atualizado;
+}

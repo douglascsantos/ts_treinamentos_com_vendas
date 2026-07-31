@@ -1,4 +1,9 @@
 <?php
+require_once __DIR__ . '/acesso.php';
+if (PHP_SAPI !== 'cli') {
+    acesso_registrar_e_checar_bloqueio();
+}
+
 /** Escapa texto para saída segura em HTML. */
 function e(string $value): string
 {
@@ -36,6 +41,34 @@ function primeiro_nome(string $nomeCompleto): string
 {
     $partes = explode(' ', trim($nomeCompleto));
     return $partes[0] ?? '';
+}
+
+/**
+ * Reordena uma lista deixando os itens ativos primeiro (dentro de cada grupo,
+ * mantém a ordem original — usort é estável desde o PHP 8). Usado pelas
+ * listagens do painel interno (produtos, turmas, imagens da agenda): item
+ * desabilitado desce pro fim da lista automaticamente, sem sumir.
+ */
+function ordenar_ativos_primeiro(array $itens, callable $ehAtivo): array
+{
+    usort($itens, fn ($a, $b) => (int) !$ehAtivo($a) <=> (int) !$ehAtivo($b));
+    return $itens;
+}
+
+/**
+ * Bloco "Em atualização" — mostrado no lugar da agenda/cursos/produtos
+ * quando o administrativo inativou tudo daquela seção, pra visitante nunca
+ * ver a seção vazia ou quebrada (mesmo componente reaproveitado nas 3 seções
+ * — ver index.php e equipe/agenda.php, turmas.php, produtos.php).
+ */
+function placeholder_em_atualizacao(string $basePath, string $mensagem): void
+{
+    ?>
+    <div class="placeholder-atualizacao">
+        <img src="<?= e($basePath) ?>assets/images/logo-ts.png" alt="TS Treinamentos" loading="lazy" />
+        <p><?= e($mensagem) ?></p>
+    </div>
+    <?php
 }
 
 /** Mesma lógica de tools/sync_common.py:slugify() — minúsculo, sem acento, só a-z0-9 e hífen. */

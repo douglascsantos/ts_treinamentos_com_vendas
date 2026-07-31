@@ -6,11 +6,14 @@
  * com link pro contrato assinado e recibo.
  */
 require __DIR__ . '/includes/functions.php';
-require __DIR__ . '/includes/storage.php';
+require_once __DIR__ . '/includes/storage.php';
 require __DIR__ . '/includes/alunos.php';
 require __DIR__ . '/includes/pedidos.php';
 require __DIR__ . '/includes/turmas.php';
 require __DIR__ . '/includes/produtos.php';
+require __DIR__ . '/includes/env.php';
+require __DIR__ . '/includes/db.php';
+require __DIR__ . '/includes/certificados.php';
 require __DIR__ . '/includes/csrf.php';
 csrf_ensure_session();
 
@@ -34,6 +37,12 @@ if (!$aluno) {
 $pedidos = find_pedidos_by_aluno($aluno['id']);
 $cursos = array_values(array_filter($pedidos, fn ($p) => $p['tipo'] === 'curso'));
 $produtos = array_values(array_filter($pedidos, fn ($p) => $p['tipo'] === 'produto'));
+
+try {
+    $certificados = listar_certificados_por_aluno($aluno['id']);
+} catch (Throwable $e) {
+    $certificados = [];
+}
 
 $statusLabels = [
     'pendente' => ['Pagamento pendente', 'status-last'],
@@ -82,7 +91,7 @@ include __DIR__ . '/includes/header.php';
         <?php endif; ?>
         <h1 class="checkout-status-title">Bem-vindo(a), <?= e(trim($aluno['pronome'] . ' ' . $aluno['nome'])) ?>!</h1>
         <p class="lead-muted checkout-status-msg">
-            A Área do Aluno completa (histórico escolar, presenças, certificados e aulas online)
+            A Área do Aluno completa (histórico escolar, presenças e aulas online)
             ainda está em construção — em breve tudo isso vai aparecer aqui.
         </p>
         <div class="checkout-actions">
@@ -174,5 +183,29 @@ include __DIR__ . '/includes/header.php';
         <?php endif; ?>
     </div>
 </section>
+
+<?php if ($certificados): ?>
+<section class="section" style="padding-top:0;">
+    <div class="container">
+        <div class="section-head" style="max-width:none;">
+            <p class="eyebrow">Meus certificados</p>
+            <h2>Certificados de conclusão</h2>
+        </div>
+        <div class="pedidos-list">
+            <?php foreach ($certificados as $c): ?>
+                <div class="pedido-card">
+                    <div>
+                        <h3><?= e($c['curso_nome']) ?></h3>
+                        <p class="muted"><?= (int) $c['carga_horaria'] ?>h · concluído em <?= e(date('d/m/Y', strtotime($c['data_emissao']))) ?></p>
+                    </div>
+                    <div class="pedido-card-actions">
+                        <a class="btn btn-primary" href="certificado.php?codigo=<?= e(rawurlencode($c['numero_hash'])) ?>" target="_blank" rel="noopener">Ver certificado</a>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

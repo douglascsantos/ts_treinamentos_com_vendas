@@ -16,7 +16,7 @@ function render_produto_page(string $slug): void
     $version = require __DIR__ . '/version.php';
     $produto = find_produto($slug);
 
-    if (!$produto) {
+    if (!$produto || !produto_ativo($produto)) {
         http_response_code(404);
         $page_title = 'Produto não encontrado | ' . $config['site_name'];
         $base_path = '../';

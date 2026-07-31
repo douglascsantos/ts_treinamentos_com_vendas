@@ -5,7 +5,7 @@
  * enquanto a Área do Aluno completa não é construída (ver ROADMAP.md).
  */
 require __DIR__ . '/includes/functions.php';
-require __DIR__ . '/includes/storage.php';
+require_once __DIR__ . '/includes/storage.php';
 require __DIR__ . '/includes/alunos.php';
 require __DIR__ . '/includes/pedidos.php';
 require __DIR__ . '/includes/env.php';

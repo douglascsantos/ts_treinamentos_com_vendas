@@ -294,7 +294,7 @@ button { font: inherit; cursor: pointer; }
 
 /* Footer */
 .site-footer { background: #14261a; color: rgba(255,255,255,.85); overflow: hidden; }
-.footer-grid { padding: 56px 0 32px; display: grid; gap: 2.25rem; grid-template-columns: 1fr; }
+.footer-grid { padding-top: 56px; padding-bottom: 32px; display: grid; gap: 2.25rem; grid-template-columns: 1fr; }
 .footer-grid > * { min-width: 0; }
 @media (min-width: 720px) { .footer-grid { grid-template-columns: 1.3fr 1fr 1fr; } }
 @media (min-width: 1024px) { .footer-grid { grid-template-columns: 1.4fr .8fr 1fr 1fr; } }
@@ -315,7 +315,7 @@ button { font: inherit; cursor: pointer; }
 .footer-contact li { overflow-wrap: break-word; min-width: 0; }
 .footer-map-col .card-frame { height: 180px; border: 1px solid rgba(255,255,255,.12); max-width: 100%; }
 .footer-bottom {
-  padding: 20px 0 28px; border-top: 1px solid rgba(255,255,255,.1);
+  padding-top: 20px; padding-bottom: 28px; border-top: 1px solid rgba(255,255,255,.1);
   display: flex; flex-direction: column; gap: .35rem; align-items: center; text-align: center;
   font-size: .78rem; color: rgba(255,255,255,.55);
 }
@@ -384,7 +384,7 @@ button { font: inherit; cursor: pointer; }
 .form-field label { font-size: .82rem; font-weight: 700; color: var(--foreground); }
 .form-field input, .form-field select {
   padding: .65rem .85rem; border: 1px solid var(--border); border-radius: .5rem;
-  font: inherit; font-size: .92rem; background: #fff; color: var(--foreground);
+  font: inherit; font-size: .92rem; background: #fff; color: var(--foreground); min-height: 44px;
 }
 .form-field input:focus, .form-field select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .form-row { display: grid; gap: 1rem; grid-template-columns: 110px 1fr; }
@@ -433,3 +433,28 @@ button { font: inherit; cursor: pointer; }
   .section { padding: 0; }
   body { background: #fff; }
 }
+
+/* Certificado/diploma público (certificado.php) */
+.certificado-box {
+  border: 3px double var(--primary); border-radius: 1rem; padding: 2.5rem 1.5rem;
+  text-align: center; max-width: 640px; margin: 0 auto; background: #fff;
+}
+.certificado-marca { font-family: 'Poppins',sans-serif; font-weight: 800; color: var(--primary); letter-spacing: .04em; text-transform: uppercase; font-size: .85rem; }
+.certificado-titulo { font-family: 'Poppins',sans-serif; font-weight: 800; font-size: 1.6rem; color: var(--foreground); margin: .6rem 0 1.5rem; }
+.certificado-corpo { font-size: 1.02rem; line-height: 1.8; color: var(--foreground); max-width: 480px; margin: 0 auto; }
+.certificado-assinaturas { display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin-top: 2.5rem; }
+.certificado-assinatura { min-width: 180px; }
+.certificado-assinatura img { max-height: 60px; max-width: 180px; object-fit: contain; margin-bottom: .4rem; }
+.certificado-assinatura-nome { font-weight: 700; border-top: 1px solid var(--border); padding-top: .4rem; margin-top: .4rem; }
+.certificado-assinatura-cargo { font-size: .8rem; color: var(--muted-foreground); }
+.certificado-codigo { margin-top: 2rem; font-size: .78rem; color: var(--muted-foreground); font-family: ui-monospace, Menlo, monospace; }
+@media (min-width: 640px) { .certificado-box { padding: 3.5rem 3rem; } }
+
+/* "Em atualização" — agenda/cursos/produtos sem nenhum item ativo (ver placeholder_em_atualizacao() em includes/functions.php) */
+.placeholder-atualizacao {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+  padding-top: 3rem; padding-bottom: 3rem; border: 1px dashed var(--border); border-radius: 1rem;
+  background: rgba(27,94,32,.03); text-align: center; color: var(--muted-foreground);
+}
+.placeholder-atualizacao img { width: 64px; height: 64px; object-fit: contain; opacity: .55; }
+.placeholder-atualizacao p { font-size: .95rem; font-weight: 600; max-width: 320px; color: var(--foreground); }

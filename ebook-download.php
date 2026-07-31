@@ -5,7 +5,7 @@
  * nunca confiamos em nome de arquivo vindo do cliente.
  */
 require __DIR__ . '/includes/functions.php';
-require __DIR__ . '/includes/storage.php';
+require_once __DIR__ . '/includes/storage.php';
 require __DIR__ . '/includes/alunos.php';
 require __DIR__ . '/includes/pedidos.php';
 require __DIR__ . '/includes/produtos.php';

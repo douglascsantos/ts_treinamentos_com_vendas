@@ -49,32 +49,40 @@ equipe_header_html('Painel do Diretor', $staff['nome'] . ' (diretor)');
 
 <div class="equipe-dash-grid">
     <a class="equipe-dash-card" href="instrutores.php">
-        <h4>Instrutores</h4>
-        <p>Cadastrar, editar, desabilitar/reativar.</p>
+        <span class="equipe-dash-card-icon" aria-hidden="true">🩺</span>
+        <div><h4>Instrutores</h4><p>Cadastrar, editar, desabilitar/reativar.</p></div>
     </a>
     <a class="equipe-dash-card" href="administradores.php">
-        <h4>Administrativo/Diretor</h4>
-        <p>Cadastrar, editar, desabilitar/reativar.</p>
+        <span class="equipe-dash-card-icon" aria-hidden="true">🔑</span>
+        <div><h4>Administrativo/Diretor</h4><p>Cadastrar, editar, desabilitar/reativar.</p></div>
     </a>
     <a class="equipe-dash-card" href="alunos.php">
-        <h4>Alunos</h4>
-        <p>Cadastro manual, desabilitar/reativar.</p>
+        <span class="equipe-dash-card-icon" aria-hidden="true">🎓</span>
+        <div><h4>Alunos</h4><p>Cadastro manual, desabilitar/reativar.</p></div>
     </a>
     <a class="equipe-dash-card" href="turmas.php">
-        <h4>Turmas</h4>
-        <p>Criar curso, vagas, instrutor, desabilitar/reativar.</p>
+        <span class="equipe-dash-card-icon" aria-hidden="true">📅</span>
+        <div><h4>Turmas</h4><p>Criar curso, vagas, instrutor, desabilitar/reativar.</p></div>
+    </a>
+    <a class="equipe-dash-card" href="produtos.php">
+        <span class="equipe-dash-card-icon" aria-hidden="true">🛍️</span>
+        <div><h4>Produtos</h4><p>Cards, kits e e-books — cadastrar, editar, desabilitar/reativar.</p></div>
+    </a>
+    <a class="equipe-dash-card" href="agenda.php">
+        <span class="equipe-dash-card-icon" aria-hidden="true">🖼️</span>
+        <div><h4>Imagens da agenda</h4><p>Até 3 imagens com legenda na home, desabilitar/reativar.</p></div>
     </a>
     <a class="equipe-dash-card" href="cupons.php">
-        <h4>Cupons de desconto</h4>
-        <p>Gerar link de desconto pra um curso ou produto.</p>
+        <span class="equipe-dash-card-icon" aria-hidden="true">🏷️</span>
+        <div><h4>Cupons de desconto</h4><p>Gerar link de desconto pra um curso ou produto.</p></div>
     </a>
     <a class="equipe-dash-card" href="boletos.php">
-        <h4>Boletos</h4>
-        <p>Cadastrar parcela por aluno.</p>
+        <span class="equipe-dash-card-icon" aria-hidden="true">🧾</span>
+        <div><h4>Boletos</h4><p>Cadastrar parcela por aluno.</p></div>
     </a>
     <a class="equipe-dash-card" href="gastos.php">
-        <h4>Gastos</h4>
-        <p>Lançar e acompanhar gastos por categoria.</p>
+        <span class="equipe-dash-card-icon" aria-hidden="true">💸</span>
+        <div><h4>Gastos</h4><p>Lançar e acompanhar gastos por categoria.</p></div>
     </a>
 </div>
 

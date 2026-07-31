@@ -81,6 +81,16 @@ function find_pedido_by_nsu(string $orderNsu): ?array
     return null;
 }
 
+/** Pedidos de curso pagos de uma turma específica — "quem está matriculado" (ver equipe/minha-turma.php e equipe/turmas.php, conclusão). */
+function pedidos_pagos_por_turma(string $turmaSlug): array
+{
+    return array_values(array_filter(
+        load_pedidos(),
+        fn ($p) => ($p['tipo'] ?? '') === 'curso' && ($p['slug'] ?? '') === $turmaSlug
+            && ($p['status'] ?? '') === 'pago' && !empty($p['aluno_id'])
+    ));
+}
+
 /** Todos os pedidos vinculados a um aluno (ver vincular_pedido_aluno), mais recentes primeiro. */
 function find_pedidos_by_aluno(string $alunoId): array
 {

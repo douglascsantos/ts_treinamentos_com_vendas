@@ -7,7 +7,8 @@
     "estoque": 9999,
     "imagem": "anotacao-de-enfermagem.jpg",
     "descricao": "",
-    "arquivo_ebook": "anotacao-de-enfermagem_9ebebc37ed7a9a2e.pdf"
+    "arquivo_ebook": "anotacao-de-enfermagem_9ebebc37ed7a9a2e.pdf",
+    "ativo": true
   },
   {
     "slug": "guia-de-medicamentos",
@@ -17,7 +18,8 @@
     "estoque": 9999,
     "imagem": "guia-de-medicamentos.jpg",
     "descricao": "",
-    "arquivo_ebook": null
+    "arquivo_ebook": null,
+    "ativo": true
   },
   {
     "slug": "hipodermoclise-na-pratica",
@@ -27,6 +29,7 @@
     "estoque": 9999,
     "imagem": "hipodermoclise-na-pratica.jpg",
     "descricao": "",
-    "arquivo_ebook": "hipodermoclise-na-pratica_ac09df4033324764.pdf"
+    "arquivo_ebook": "hipodermoclise-na-pratica_ac09df4033324764.pdf",
+    "ativo": true
   }
 ]

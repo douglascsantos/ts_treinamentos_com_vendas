@@ -6,7 +6,7 @@
  * que o próprio cliente poderia manipular).
  */
 require __DIR__ . '/includes/functions.php';
-require __DIR__ . '/includes/storage.php';
+require_once __DIR__ . '/includes/storage.php';
 require __DIR__ . '/includes/pedidos.php';
 
 $config  = require __DIR__ . '/includes/config.php';

@@ -4,7 +4,7 @@
  * ou dentro do prazo (ver includes/boletos.php:boleto_situacao()).
  */
 require __DIR__ . '/includes/functions.php';
-require __DIR__ . '/includes/storage.php';
+require_once __DIR__ . '/includes/storage.php';
 require __DIR__ . '/includes/alunos.php';
 require __DIR__ . '/includes/env.php';
 require __DIR__ . '/includes/db.php';

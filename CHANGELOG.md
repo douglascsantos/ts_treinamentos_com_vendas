@@ -305,3 +305,60 @@ cadastro mais limpas no celular. Regra nova e permanente: **nunca excluímos nad
   valor que o administrativo definiu. Pego pelo `deploy-check` como achado não-bloqueante na v2.2.0;
   corrigido em seguida por proteger diretamente a política "nunca excluir, só inativar" dessa mesma
   versão.
+
+## v2.3.0 — "Nova" — 2026-07-31
+
+Maior lote de mudanças desde a v2.2.0: painel interno reorganizado com menu de verdade, produtos e
+imagens da agenda viram cadastro administrável, e o ciclo completo "instrutor lança presença/nota →
+administrativo conclui a turma → diploma é gerado e verificável publicamente" existe pela primeira vez.
+
+**Painel interno — menu e visual**
+- Cabeçalho de todo `equipe/*.php` reformulado: em vez da lista de links "·"-separada (a causa do
+  "feio e confuso" reportado), agora é uma marca + botão "☰ Menu" que revela um painel organizado
+  com ícone por item, e o primeiro nome da pessoa logada vira link direto pro próprio perfil. Toda
+  página ganhou um `<h1>` visível com o título (antes só existia na aba do navegador).
+- `equipe/diretor.php`/`administrativo.php`: grade de cartões com ícone, até 3 colunas.
+- CSS do painel reescrito mobile-first (era `max-width`, virou `min-width`, seguindo o padrão do
+  resto do site) + toques de 44px em todos os botões/campos.
+
+**Perfil pessoal + ferramentas do diretor** (`equipe/perfil.php`, novo)
+- Qualquer pessoa da equipe edita os próprios dados de contato, troca senha (confirmando a atual) e
+  inclui/remove o campo opcional de registro profissional (instrutor).
+- Só o diretor: backup do banco (.zip com todas as tabelas em SQL) e backup do site (.zip do
+  repositório) sob demanda, gerados na hora e nunca salvos no servidor; tela de logs de acesso
+  (`equipe/logs.php`) e tela de IPs com bloqueio/liberação (`equipe/ips.php`) — bloqueio em nível de
+  aplicação, registrado em toda requisição do site (`includes/acesso.php`).
+
+**Produtos e imagens da agenda viram cadastro** (`equipe/produtos.php`, `equipe/agenda.php`, novos)
+- Produtos (cards, kits, e-books): mesmo padrão lista → "+" → editar → desabilitar dos outros
+  cadastros deste painel. Upload de imagem de marketing (com instrução de medida/formato/qualidade
+  na própria tela) e, pra e-book, upload do PDF que o cliente recebe.
+- Imagens da seção Agenda da home: até 3 ativas ao mesmo tempo, cada uma com legenda, nunca
+  excluídas — só desabilitadas. Sem nenhuma ativa (e o mesmo vale se todos os cursos ou todos os
+  produtos forem desabilitados), a home mostra um aviso "Em atualização" no lugar, pra visitante
+  nunca ver a seção vazia ou quebrada.
+- Item inativo sempre desce pro fim da lista no painel (produtos, turmas, imagens da agenda).
+
+**Conclusão de turma e diploma** (novo — `equipe/minha-turma.php`, `equipe/turmas.php`,
+`certificado.php`, `includes/certificados.php`)
+- Instrutor vê as próprias turmas, marca presença + nota (0-10) + observação opcional por aluno
+  (observação só administrativo/diretor e o próprio instrutor veem, nunca o aluno) e finaliza —
+  liberando a turma pro administrativo poder concluir.
+- Administrativo só concebe "Concluir turma" depois de desabilitada e finalizada pelo instrutor, com
+  todos os campos preenchidos (inclusive instrutor e administrativo responsável, ambos assinam o
+  diploma — escolhidos no cadastro da turma). Antes de confirmar, checklist dos matriculados pra
+  escolher quem recebe diploma + campo de observação interna.
+- Cada diploma emitido vira um certificado com código de verificação público
+  (`certificado.php?codigo=...`), sem exigir login — mostra nome do aluno, curso, carga horária,
+  data e as duas assinaturas (imagem se cadastrada, senão nome/cargo em texto). Página imprimível
+  (`window.print()`), mesmo princípio já usado no contrato assinado — sem depender de biblioteca de
+  PDF no servidor. Aluno vê os próprios certificados em "Meus certificados" (`minha-conta.php`).
+
+**Correção crítica pega pelo teste local antes do deploy**
+- `includes/functions.php` passou a registrar log de acesso em toda requisição (novo, ver acima),
+  o que carrega `includes/storage.php` de propósito. Vários arquivos do site (checkout, financeiro,
+  e-book, boleto, webhook, login Google, área do aluno...) também carregavam `storage.php` direto,
+  com `require` simples em vez de `require_once` — o site inteiro quebrava com "Cannot redeclare
+  function storage_path()" assim que os dois caminhos se cruzavam na mesma requisição. Pego pelo
+  teste local (`php -S`) rodado antes do deploy, nunca chegou a subir pro ar; corrigido trocando
+  todo `require` de `storage.php` no projeto por `require_once`.

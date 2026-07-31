@@ -15,6 +15,10 @@ require __DIR__ . '/../includes/db.php';
 require __DIR__ . '/../includes/administradores.php';
 require __DIR__ . '/../includes/instrutores.php';
 require __DIR__ . '/../includes/turmas.php';
+require_once __DIR__ . '/../includes/storage.php';
+require __DIR__ . '/../includes/alunos.php';
+require __DIR__ . '/../includes/pedidos.php';
+require __DIR__ . '/../includes/certificados.php';
 require __DIR__ . '/../includes/csrf.php';
 require __DIR__ . '/../includes/equipe.php';
 
@@ -42,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar_
         $vagasOcupadas = (int) ($_POST['vagas_ocupadas'] ?? 0);
         $status = $_POST['status'] ?? 'aberta';
         $instrutorId = $_POST['instrutor_id'] !== '' ? $_POST['instrutor_id'] : null;
+        $administrativoId = ($_POST['administrativo_id'] ?? '') !== '' ? $_POST['administrativo_id'] : null;
 
         $datasIso = [];
         foreach (array_filter(array_map('trim', explode(',', $datasRaw))) as $d) {
@@ -77,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar_
                 'preco' => $preco, 'carga_horaria' => $cargaHoraria,
                 'codigo_turma' => $codigoTurma !== '' ? $codigoTurma : ($editando['codigo_turma'] ?? ''),
                 'vagas_total' => $vagasTotal, 'vagas_ocupadas' => $vagasOcupadas,
-                'status' => $status, 'instrutor_id' => $instrutorId,
+                'status' => $status, 'instrutor_id' => $instrutorId, 'administrativo_id' => $administrativoId,
                 'imagem' => $imagemNome, 'descricao' => $descricao,
             ]);
             $mensagens[] = 'Turma atualizada.';
@@ -100,7 +105,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar_
                     'preco' => $preco, 'status' => 'aberta', 'imagem' => $imagemNome, 'descricao' => $descricao,
                     'codigo_turma' => $codigoTurma !== '' ? $codigoTurma : strtoupper($slug) . '-' . date('ymd'),
                     'carga_horaria' => $cargaHoraria, 'vagas_total' => $vagasTotal, 'vagas_ocupadas' => 0,
-                    'instrutor_id' => $instrutorId, 'ativo' => true,
+                    'instrutor_id' => $instrutorId, 'administrativo_id' => $administrativoId, 'ativo' => true,
+                    'concluida' => false, 'instrutor_finalizou' => false, 'avaliacoes' => [],
                 ]);
                 $cursoPageTemplate = "<?php\nrequire __DIR__ . '/../includes/functions.php';\n"
                     . "require __DIR__ . '/../includes/env.php';\nrequire __DIR__ . '/../includes/turmas.php';\n"
@@ -125,10 +131,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($_POST['acao'] ?? '', ['de
     exit;
 }
 
+/** Tela de conclusão: valida pré-requisitos, monta o checklist de quem recebe diploma. */
+$concluindo = null;
+$matriculadosConclusao = [];
+if (isset($_GET['concluir'])) {
+    $concluindo = find_turma($_GET['concluir']);
+    if (!$concluindo) {
+        header('Location: turmas.php');
+        exit;
+    }
+    if (turma_ativa($concluindo)) {
+        $erros[] = 'Desabilite a turma antes de concluir.';
+        $concluindo = null;
+    } elseif (turma_concluida($concluindo)) {
+        header('Location: turmas.php');
+        exit;
+    } elseif (!($concluindo['instrutor_finalizou'] ?? false)) {
+        $erros[] = 'O instrutor ainda não finalizou a presença/nota dessa turma — peça pra ele concluir primeiro (ver equipe/minha-turma.php).';
+        $concluindo = null;
+    } else {
+        $faltando = turma_campos_faltando_para_concluir($concluindo);
+        if ($faltando) {
+            header('Location: turmas.php?editar=' . rawurlencode($concluindo['slug']) . '&faltando=' . rawurlencode(implode(',', $faltando)));
+            exit;
+        }
+        $avaliacoesPorAluno = [];
+        foreach ($concluindo['avaliacoes'] ?? [] as $av) {
+            $avaliacoesPorAluno[$av['aluno_id']] = $av;
+        }
+        foreach (pedidos_pagos_por_turma($concluindo['slug']) as $pedido) {
+            $aluno = find_aluno_by_id($pedido['aluno_id']);
+            if (!$aluno) {
+                continue;
+            }
+            $matriculadosConclusao[] = [
+                'aluno' => $aluno,
+                'pedido' => $pedido,
+                'avaliacao' => $avaliacoesPorAluno[$aluno['id']] ?? null,
+            ];
+        }
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'confirmar_conclusao') {
+    if (!csrf_verify($_POST['csrf_token'] ?? null)) {
+        $erros[] = 'Sessão expirada, tente de novo.';
+    } else {
+        $turma = find_turma($_POST['slug'] ?? '');
+        $faltando = $turma ? turma_campos_faltando_para_concluir($turma) : ['Turma não encontrada'];
+        if (!$turma || $faltando || turma_concluida($turma) || turma_ativa($turma)) {
+            $erros[] = 'Não foi possível concluir essa turma — confira os dados e tente de novo.';
+        } else {
+            $selecionados = array_map('strval', $_POST['diploma_alunos'] ?? []);
+            $observacao = trim($_POST['observacao_conclusao'] ?? '');
+            $hoje = date('Y-m-d');
+            $diplomasGerados = [];
+
+            foreach (pedidos_pagos_por_turma($turma['slug']) as $pedido) {
+                if (!in_array($pedido['aluno_id'], $selecionados, true)) {
+                    continue;
+                }
+                $aluno = find_aluno_by_id($pedido['aluno_id']);
+                if (!$aluno) {
+                    continue;
+                }
+                criar_certificado([
+                    'pedido_id'          => $pedido['order_nsu'],
+                    'aluno_id'           => $aluno['id'],
+                    'turma_slug'         => $turma['slug'],
+                    'aluno_nome'         => trim(($aluno['pronome'] ?? '') . ' ' . $aluno['nome']),
+                    'curso_nome'         => $turma['curso'],
+                    'carga_horaria'      => $turma['carga_horaria'],
+                    'data_emissao'       => $hoje,
+                    'instrutor_id'       => $turma['instrutor_id'],
+                    'administrativo_id'  => $turma['administrativo_id'],
+                ]);
+                $diplomasGerados[] = $aluno['id'];
+            }
+
+            atualizar_turma($turma['slug'], [
+                'concluida' => true, 'concluida_em' => date('Y-m-d H:i:s'),
+                'observacao_conclusao' => $observacao, 'diploma_alunos' => $diplomasGerados,
+            ]);
+            $mensagens[] = 'Turma concluída — ' . count($diplomasGerados) . ' diploma(s) gerado(s).';
+        }
+        if (!$erros) {
+            header('Location: turmas.php');
+            exit;
+        }
+    }
+}
+
 $editando = null;
 if (isset($_GET['editar'])) {
     $editando = find_turma($_GET['editar']);
 }
+$camposFaltandoAviso = isset($_GET['faltando']) ? explode(',', $_GET['faltando']) : [];
 
 if ($editando) {
     $valores = [
@@ -138,7 +236,7 @@ if ($editando) {
         'carga_horaria' => $editando['carga_horaria'] ?? 0, 'vagas_total' => $editando['vagas_total'] ?? 0,
         'vagas_ocupadas' => $editando['vagas_ocupadas'] ?? 0, 'codigo_turma' => $editando['codigo_turma'] ?? '',
         'status' => $editando['status'] ?? 'aberta', 'instrutor_id' => $editando['instrutor_id'] ?? '',
-        'descricao' => $editando['descricao'] ?? '',
+        'administrativo_id' => $editando['administrativo_id'] ?? '', 'descricao' => $editando['descricao'] ?? '',
     ];
 } elseif ($erros && isset($_POST['curso'])) {
     $valores = [
@@ -147,22 +245,27 @@ if ($editando) {
         'carga_horaria' => $_POST['carga_horaria'] ?? 0, 'vagas_total' => $_POST['vagas_total'] ?? 0,
         'vagas_ocupadas' => $_POST['vagas_ocupadas'] ?? 0, 'codigo_turma' => $_POST['codigo_turma'] ?? '',
         'status' => $_POST['status'] ?? 'aberta', 'instrutor_id' => $_POST['instrutor_id'] ?? '',
-        'descricao' => $_POST['descricao'] ?? '',
+        'administrativo_id' => $_POST['administrativo_id'] ?? '', 'descricao' => $_POST['descricao'] ?? '',
     ];
 } else {
     $valores = [
         'slug_original' => '', 'curso' => '', 'datas' => '', 'horario' => '', 'local' => '', 'preco' => '',
         'carga_horaria' => 0, 'vagas_total' => 0, 'vagas_ocupadas' => 0, 'codigo_turma' => '',
-        'status' => 'aberta', 'instrutor_id' => '', 'descricao' => '',
+        'status' => 'aberta', 'instrutor_id' => '', 'administrativo_id' => '', 'descricao' => '',
     ];
 }
 $formAberto = $editando !== null || (bool) $erros;
 
-$turmas = load_turmas();
+$turmas = ordenar_ativos_primeiro(load_turmas(), 'turma_ativa');
 $instrutores = listar_instrutores();
 $instrutoresPorId = [];
 foreach ($instrutores as $i) {
     $instrutoresPorId[$i['id']] = $i['nome_completo'];
+}
+$administradores = listar_administradores();
+$administradoresPorId = [];
+foreach ($administradores as $a) {
+    $administradoresPorId[$a['id']] = $a['nome'];
 }
 
 equipe_header_html('Turmas', $staff['nome']);
@@ -176,6 +279,51 @@ equipe_header_html('Turmas', $staff['nome']);
 <?php if ($erros): ?>
     <div class="form-errors-box"><ul><?php foreach ($erros as $msg): ?><li><?= e($msg) ?></li><?php endforeach; ?></ul></div>
 <?php endif; ?>
+<?php if ($camposFaltandoAviso): ?>
+    <div class="form-errors-box">Preencha antes de concluir a turma: <strong><?= e(implode(', ', $camposFaltandoAviso)) ?></strong>.</div>
+<?php endif; ?>
+
+<?php if ($concluindo): ?>
+<div class="equipe-card">
+    <h3>Concluir turma: <?= e($concluindo['curso']) ?></h3>
+    <p class="muted" style="margin-bottom:1.25rem;">Selecione quem recebe diploma e confirme. Essa ação gera os certificados e não pode ser desfeita.</p>
+    <form method="post">
+        <?= csrf_field() ?>
+        <input type="hidden" name="acao" value="confirmar_conclusao" />
+        <input type="hidden" name="slug" value="<?= e($concluindo['slug']) ?>" />
+        <?php if (!$matriculadosConclusao): ?>
+            <p class="equipe-empty">Nenhum aluno matriculado (pedido pago) nessa turma.</p>
+        <?php else: ?>
+            <div class="equipe-list">
+                <?php foreach ($matriculadosConclusao as $m): ?>
+                    <?php $av = $m['avaliacao']; ?>
+                    <label class="equipe-list-item" style="cursor:pointer;">
+                        <span class="equipe-list-link" style="flex:1;">
+                            <input type="checkbox" name="diploma_alunos[]" value="<?= e($m['aluno']['id']) ?>" <?= (!$av || ($av['presenca'] ?? false)) ? 'checked' : '' ?> style="margin-right:.6rem;width:18px;height:18px;vertical-align:middle;" />
+                            <?= e(trim(($m['aluno']['pronome'] ?? '') . ' ' . $m['aluno']['nome'])) ?>
+                            <span class="equipe-list-meta">
+                                <?php if ($av): ?>
+                                    Presença: <?= ($av['presenca'] ?? false) ? 'sim' : 'não' ?><?= isset($av['nota']) && $av['nota'] !== null ? ' · Nota: ' . e((string) $av['nota']) : '' ?>
+                                <?php else: ?>
+                                    Sem registro do instrutor ainda
+                                <?php endif; ?>
+                            </span>
+                        </span>
+                    </label>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+        <div class="form-field" style="margin-top:1.25rem;">
+            <label>Observação interna (só administrativo/diretor veem — nunca aparece pro aluno ou instrutor)</label>
+            <input type="text" name="observacao_conclusao" placeholder="ex: turma concluída sem intercorrências" />
+        </div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem;">
+            <button type="submit" class="btn btn-primary">Confirmar conclusão e gerar diplomas</button>
+            <a class="btn btn-outline-dark" href="turmas.php">Cancelar</a>
+        </div>
+    </form>
+</div>
+<?php else: ?>
 
 <div class="equipe-card">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;">
@@ -200,13 +348,24 @@ equipe_header_html('Turmas', $staff['nome']);
                         </span>
                     </a>
                     <div class="equipe-list-actions">
-                        <span class="<?= $ativa ? 'badge-ativo' : 'badge-inativo' ?>"><?= $ativa ? 'Ativa' : 'Inativa' ?></span>
-                        <form method="post" style="display:inline;">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="acao" value="<?= $ativa ? 'desativar_turma' : 'ativar_turma' ?>" />
-                            <input type="hidden" name="slug" value="<?= e($t['slug']) ?>" />
-                            <button type="submit" class="<?= $ativa ? 'btn-disable' : 'btn-enable' ?>"><?= $ativa ? 'Desabilitar' : 'Reativar' ?></button>
-                        </form>
+                        <?php if (turma_concluida($t)): ?>
+                            <span class="badge-ativo">Concluída · diplomas emitidos</span>
+                        <?php else: ?>
+                            <span class="<?= $ativa ? 'badge-ativo' : 'badge-inativo' ?>"><?= $ativa ? 'Ativa' : 'Inativa' ?></span>
+                            <form method="post" style="display:inline;">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="acao" value="<?= $ativa ? 'desativar_turma' : 'ativar_turma' ?>" />
+                                <input type="hidden" name="slug" value="<?= e($t['slug']) ?>" />
+                                <button type="submit" class="<?= $ativa ? 'btn-disable' : 'btn-enable' ?>"><?= $ativa ? 'Desabilitar' : 'Reativar' ?></button>
+                            </form>
+                            <?php if (!$ativa): ?>
+                                <?php if ($t['instrutor_finalizou'] ?? false): ?>
+                                    <a class="btn-enable" href="turmas.php?concluir=<?= e($t['slug']) ?>" style="text-decoration:none;display:inline-flex;align-items:center;">Concluir turma</a>
+                                <?php else: ?>
+                                    <span class="equipe-list-meta" style="width:100%;">Aguardando o instrutor finalizar</span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -257,6 +416,15 @@ equipe_header_html('Turmas', $staff['nome']);
                     </select>
                 </div>
             </div>
+            <div class="form-field">
+                <label>Administrativo responsável (assina o diploma junto com o instrutor)</label>
+                <select name="administrativo_id">
+                    <option value="">-- Sem administrativo ainda --</option>
+                    <?php foreach ($administradores as $a): ?>
+                        <option value="<?= e($a['id']) ?>" <?= $valores['administrativo_id'] === $a['id'] ? 'selected' : '' ?>><?= e($a['nome']) ?> (<?= e(ucfirst($a['nivel'])) ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
             <div class="form-field"><label>Imagem<?= $editando ? ' (deixe em branco pra manter a atual)' : '' ?></label><input type="file" name="imagem" accept="image/*" <?= $editando ? '' : 'required' ?> /></div>
             <div class="form-field"><label>Descrição</label><input type="text" name="descricao" value="<?= e($valores['descricao']) ?>" /></div>
             <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:.5rem;">
@@ -266,5 +434,6 @@ equipe_header_html('Turmas', $staff['nome']);
         </form>
     </div>
 </div>
+<?php endif; ?>
 
 <?php equipe_footer_html(); ?>

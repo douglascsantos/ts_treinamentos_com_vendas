@@ -7,7 +7,7 @@
  * auth/google-completar-cadastro.php e criar_aluno_google() em includes/alunos.php.
  */
 require __DIR__ . '/../includes/functions.php';
-require __DIR__ . '/../includes/storage.php';
+require_once __DIR__ . '/../includes/storage.php';
 require __DIR__ . '/../includes/alunos.php';
 require __DIR__ . '/../includes/pedidos.php';
 require __DIR__ . '/../includes/env.php';
