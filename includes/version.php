@@ -18,7 +18,7 @@
 return [
     'brand'      => 'TS Treinamentos',
     'year'       => date('Y'),
-    'version'    => '2.0.2',
+    'version'    => '2.0.3',
     'codename'   => 'Star',
     'stage'      => 'production',
     'updated_at' => '2026-07-31',

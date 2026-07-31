@@ -197,3 +197,17 @@ Duas correções reportadas pelo cliente.
   ausente/incompleto no servidor, fora do repositório). `equipe/login.php` captura e mostra esse
   erro temporariamente (marcado `diagnostico_temporario` no código — remover depois de confirmada
   e corrigida a causa raiz).
+
+## v2.0.3 — "Star" — 2026-07-31
+
+Causa raiz do erro 500 confirmada e corrigida: não era o `secret.env` (esse estava correto) — era
+o Remote MySQL da Hostinger recusando a conexão vinda do próprio servidor de produção
+(`Access denied for user '...'@'2a02:4780:13::f'`, o IP de saída do servidor, nunca liberado no
+painel — só o IP da máquina de desenvolvimento estava). Resolvido trocando `DB_HOST` de
+`srv725.hstgr.io` pra `localhost` no `secret.env` do servidor (hosting e banco são a mesma conta
+Hostinger, então a conexão interna não passa pela restrição de acesso remoto). Login da equipe
+confirmado funcionando em produção.
+
+- Removida a mensagem de diagnóstico detalhada de `equipe/login.php` (mostrava o erro técnico na
+  tela — era intencional e temporário, só pra eu conseguir ver a causa sem acesso ao log do
+  servidor). Volta a mostrar "Erro ao conectar. Tente novamente em instantes." — genérico, seguro.

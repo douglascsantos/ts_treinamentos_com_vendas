@@ -53,9 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $erros[] = 'E-mail ou senha inválidos.';
         } catch (Throwable $e) {
-            // Diagnóstico temporário (ver includes/db.php) — remover assim que o problema
-            // de conexão com o banco em produção estiver confirmado e corrigido.
-            $erros[] = 'diagnostico_temporario: ' . $e->getMessage();
+            $erros[] = 'Erro ao conectar. Tente novamente em instantes.';
         }
     }
 }
