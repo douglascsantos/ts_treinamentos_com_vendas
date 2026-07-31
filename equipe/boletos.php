@@ -126,6 +126,7 @@ equipe_header_html('Boletos', $staff['nome']);
 
 <div class="equipe-card">
     <h3>Todos os boletos (<?= count($boletos) ?>)</h3>
+    <div class="equipe-table-wrap">
     <table class="equipe-table">
         <thead><tr><th>Aluno</th><th>Pedido</th><th>Parcela</th><th>Vencimento</th><th>Situação</th><th></th></tr></thead>
         <tbody>
@@ -154,6 +155,7 @@ equipe_header_html('Boletos', $staff['nome']);
         <?php if (!$boletos): ?><tr><td colspan="6" class="muted">Nenhum boleto cadastrado ainda.</td></tr><?php endif; ?>
         </tbody>
     </table>
+    </div>
 </div>
 
 <?php equipe_footer_html(); ?>

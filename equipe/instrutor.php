@@ -44,6 +44,7 @@ equipe_header_html('Painel do Instrutor', $staff['nome']);
 
 <div class="equipe-card">
     <h3>Meus dados</h3>
+    <div class="equipe-table-wrap">
     <table class="equipe-table">
         <tr><th>Nome</th><td><?= e($eu['nome_completo']) ?></td></tr>
         <tr><th>Formação</th><td><?= e($eu['formacao']) ?></td></tr>
@@ -52,6 +53,7 @@ equipe_header_html('Painel do Instrutor', $staff['nome']);
         <tr><th>E-mail</th><td><?= e($eu['email']) ?></td></tr>
         <tr><th>WhatsApp</th><td><?= e($eu['whatsapp']) ?></td></tr>
     </table>
+    </div>
 </div>
 
 <div class="equipe-card">

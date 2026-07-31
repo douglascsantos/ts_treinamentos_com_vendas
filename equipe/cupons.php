@@ -122,6 +122,7 @@ equipe_header_html('Cupons de Desconto', $staff['nome']);
 
 <div class="equipe-card">
     <h3>Cupons gerados (<?= count($cupons) ?>)</h3>
+    <div class="equipe-table-wrap">
     <table class="equipe-table">
         <thead><tr><th>Código</th><th>Item</th><th>Desconto</th><th>Validade</th><th>Situação</th></tr></thead>
         <tbody>
@@ -148,6 +149,7 @@ equipe_header_html('Cupons de Desconto', $staff['nome']);
         <?php if (!$cupons): ?><tr><td colspan="5" class="muted">Nenhum cupom gerado ainda.</td></tr><?php endif; ?>
         </tbody>
     </table>
+    </div>
 </div>
 
 <script>

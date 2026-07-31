@@ -66,6 +66,7 @@ equipe_header_html('Gastos', $staff['nome']);
 
 <div class="equipe-card">
     <h3>Resumo</h3>
+    <div class="equipe-table-wrap">
     <table class="equipe-table">
         <thead><tr><th>Tipo</th><th>Total</th></tr></thead>
         <tbody>
@@ -75,6 +76,7 @@ equipe_header_html('Gastos', $staff['nome']);
         <tr><td><strong>Total geral</strong></td><td><strong><?= e(format_price($totalGeral)) ?></strong></td></tr>
         </tbody>
     </table>
+    </div>
 </div>
 
 <div class="equipe-card">
@@ -116,6 +118,7 @@ equipe_header_html('Gastos', $staff['nome']);
 
 <div class="equipe-card">
     <h3>Últimos gastos (<?= count($gastos) ?>)</h3>
+    <div class="equipe-table-wrap">
     <table class="equipe-table">
         <thead><tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Valor</th></tr></thead>
         <tbody>
@@ -131,6 +134,7 @@ equipe_header_html('Gastos', $staff['nome']);
         <?php if (!$gastos): ?><tr><td colspan="5" class="muted">Nenhum gasto lançado ainda.</td></tr><?php endif; ?>
         </tbody>
     </table>
+    </div>
 </div>
 
 <script>

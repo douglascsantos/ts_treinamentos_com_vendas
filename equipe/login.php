@@ -28,29 +28,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($email === '' || $senha === '') {
         $erros[] = 'Informe e-mail e senha.';
     } else {
-        $admin = verificar_login_administrador($email, $senha);
-        if ($admin) {
-            session_regenerate_id(true);
-            $_SESSION['staff_tipo'] = 'administrador';
-            $_SESSION['staff_id'] = $admin['id'];
-            $_SESSION['staff_nivel'] = $admin['nivel'];
-            $_SESSION['staff_nome'] = $admin['nome'];
-            header('Location: ' . ($admin['nivel'] === 'diretor' ? 'diretor.php' : 'administrativo.php'));
-            exit;
-        }
+        try {
+            $admin = verificar_login_administrador($email, $senha);
+            if ($admin) {
+                session_regenerate_id(true);
+                $_SESSION['staff_tipo'] = 'administrador';
+                $_SESSION['staff_id'] = $admin['id'];
+                $_SESSION['staff_nivel'] = $admin['nivel'];
+                $_SESSION['staff_nome'] = $admin['nome'];
+                header('Location: ' . ($admin['nivel'] === 'diretor' ? 'diretor.php' : 'administrativo.php'));
+                exit;
+            }
 
-        $instrutor = verificar_login_instrutor($email, $senha);
-        if ($instrutor) {
-            session_regenerate_id(true);
-            $_SESSION['staff_tipo'] = 'instrutor';
-            $_SESSION['staff_id'] = $instrutor['id'];
-            $_SESSION['staff_nivel'] = null;
-            $_SESSION['staff_nome'] = $instrutor['nome_completo'];
-            header('Location: instrutor.php');
-            exit;
-        }
+            $instrutor = verificar_login_instrutor($email, $senha);
+            if ($instrutor) {
+                session_regenerate_id(true);
+                $_SESSION['staff_tipo'] = 'instrutor';
+                $_SESSION['staff_id'] = $instrutor['id'];
+                $_SESSION['staff_nivel'] = null;
+                $_SESSION['staff_nome'] = $instrutor['nome_completo'];
+                header('Location: instrutor.php');
+                exit;
+            }
 
-        $erros[] = 'E-mail ou senha inválidos.';
+            $erros[] = 'E-mail ou senha inválidos.';
+        } catch (Throwable $e) {
+            // Diagnóstico temporário (ver includes/db.php) — remover assim que o problema
+            // de conexão com o banco em produção estiver confirmado e corrigido.
+            $erros[] = 'diagnostico_temporario: ' . $e->getMessage();
+        }
     }
 }
 ?>

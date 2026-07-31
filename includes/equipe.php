@@ -47,9 +47,17 @@ function equipe_header_html(string $titulo, string $nomeExibido): void
   .equipe-topbar strong { font-size: .95rem; }
   .equipe-main { max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
   .equipe-card { background: #fff; border: 1px solid var(--border); border-radius: .85rem; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-card); }
-  .equipe-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-  .equipe-table th, .equipe-table td { text-align: left; padding: .55rem .6rem; border-bottom: 1px solid var(--border); }
+  /* Tabela pode ter mais colunas do que cabe numa tela de celular — em vez de
+     cortar (o body do site é overflow-x:hidden), essa faixa rola de lado só
+     nela, sem quebrar o layout da página em volta. */
+  .equipe-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .equipe-table { width: 100%; min-width: 480px; border-collapse: collapse; font-size: .88rem; }
+  .equipe-table th, .equipe-table td { text-align: left; padding: .55rem .6rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
   .equipe-table th { color: var(--muted-foreground); font-weight: 600; }
+  @media (max-width: 640px) {
+    .equipe-card { padding: 1.1rem; }
+    .equipe-main { padding: 1.25rem .9rem 3rem; }
+  }
 </style>
 </head>
 <body>

@@ -180,3 +180,20 @@ Correção reportada pelo cliente: cabeçalho aparecendo transparente/desalinhad
   fundo semi-transparente (`rgba(255,255,255,.92)`), deixando o conteúdo por trás "vazar" através
   do cabeçalho. Adicionado o prefixo, mais um fallback `@supports` pra fundo sólido em navegadores
   sem suporte a nenhuma das duas versões (nunca mais fica transparente demais).
+
+## v2.0.2 — "Star" — 2026-07-31
+
+Duas correções reportadas pelo cliente.
+
+- **Painel da equipe quebrado no mobile**: as 7 tabelas em `equipe/*.php` (instrutores,
+  administradores, cupons, boletos, gastos) não tinham nenhum tratamento de rolagem horizontal, e
+  o `body` do site é `overflow-x: hidden` — no celular, colunas que não cabiam eram simplesmente
+  cortadas/escondidas em vez de aparecerem. Em desktop havia espaço de sobra, por isso passava
+  despercebido lá. Adicionado `.equipe-table-wrap` (rola só a tabela, não a página) em
+  `includes/equipe.php`, aplicado nas 7 tabelas.
+- **Erro 500 no login da equipe em produção**: `includes/db.php` agora lança um erro descritivo
+  em vez de deixar uma `PDOException` sem tratamento estourar como 500 em branco — necessário pra
+  diagnosticar por que a conexão com o MySQL está falhando em produção (suspeita: `secret.env`
+  ausente/incompleto no servidor, fora do repositório). `equipe/login.php` captura e mostra esse
+  erro temporariamente (marcado `diagnostico_temporario` no código — remover depois de confirmada
+  e corrigida a causa raiz).

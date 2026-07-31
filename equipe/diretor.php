@@ -261,6 +261,7 @@ equipe_header_html('Painel do Diretor', $staff['nome'] . ' (diretor)');
 
 <div class="equipe-card">
     <h3>Instrutores (<?= count($instrutores) ?>)</h3>
+    <div class="equipe-table-wrap">
     <table class="equipe-table">
         <thead><tr><th>Nome</th><th>Área</th><th>Registro</th><th>E-mail</th><th>Assinatura</th></tr></thead>
         <tbody>
@@ -276,10 +277,12 @@ equipe_header_html('Painel do Diretor', $staff['nome'] . ' (diretor)');
         <?php if (!$instrutores): ?><tr><td colspan="5" class="muted">Nenhum instrutor cadastrado ainda.</td></tr><?php endif; ?>
         </tbody>
     </table>
+    </div>
 </div>
 
 <div class="equipe-card">
     <h3>Administrativo/Diretor (<?= count($administradores) ?>)</h3>
+    <div class="equipe-table-wrap">
     <table class="equipe-table">
         <thead><tr><th>Nome</th><th>Nível</th><th>E-mail</th><th>Assinatura</th></tr></thead>
         <tbody>
@@ -293,6 +296,7 @@ equipe_header_html('Painel do Diretor', $staff['nome'] . ' (diretor)');
         <?php endforeach; ?>
         </tbody>
     </table>
+    </div>
 </div>
 
 <?php equipe_footer_html(); ?>
