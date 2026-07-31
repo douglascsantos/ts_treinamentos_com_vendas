@@ -6,7 +6,8 @@
     "preco": 19.9,
     "estoque": 9999,
     "imagem": "anotacao-de-enfermagem.jpg",
-    "descricao": ""
+    "descricao": "",
+    "arquivo_ebook": "anotacao-de-enfermagem_9ebebc37ed7a9a2e.pdf"
   },
   {
     "slug": "guia-de-medicamentos",
@@ -15,7 +16,8 @@
     "preco": 19.9,
     "estoque": 9999,
     "imagem": "guia-de-medicamentos.jpg",
-    "descricao": ""
+    "descricao": "",
+    "arquivo_ebook": null
   },
   {
     "slug": "hipodermoclise-na-pratica",
@@ -24,6 +26,7 @@
     "preco": 19.9,
     "estoque": 9999,
     "imagem": "hipodermoclise-na-pratica.jpg",
-    "descricao": ""
+    "descricao": "",
+    "arquivo_ebook": "hipodermoclise-na-pratica_ac09df4033324764.pdf"
   }
 ]

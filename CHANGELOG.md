@@ -115,3 +115,58 @@ Catálogo de produtos ganha conteúdo real e agente próprio. `stage` do rodapé
 - `produtos_ts_site/PRODUTOS_README.md` criado documentando os formatos de nome aceitos.
 - `ROADMAP.md` atualizado: item "Agente de produtos" removido (concluído).
 - `deploy-check` atualizado para o novo estado do catálogo de produtos.
+
+## v2.0.0 — "Star" — 2026-07-31
+
+Maior salto do site desde o protótipo inicial: contratos reescritos, checkout com cupom de
+desconto, área do aluno completa (Google, foto, dados editáveis, financeiro, e-book), banco de
+dados MySQL criado em produção e o primeiro sistema de painel interno (diretor/administrativo/
+instrutor) com login próprio.
+
+**Contratos e checkout**
+- Contrato de curso reescrito: sem matrícula parcial de 15% (removida), reserva de vaga só com
+  pagamento integral, direito de arrependimento CDC art. 49 (7 dias, reembolso integral) e
+  reembolso parcial escalonado por proximidade do curso (90/80/70/30/0%).
+- Termo de LGPD/uso de imagem e termo de consentimento para práticas com risco de lesão (este
+  último redigido como consentimento informado, não renúncia — orientação do COREN), unidos ao
+  contrato de prestação de serviços num modal com abas.
+- `status_entrega` do pedido nunca fica em branco: curso e e-book nascem `entregue`, produto
+  físico nasce `a_caminho`.
+- Cupom de desconto: gerado pelo administrativo pra um curso/produto específico (R$ ou %, prazo
+  em dias), link único (`?cupom=CODIGO`), uso único.
+
+**Área do aluno**
+- Login com Google (OAuth 2.0) além de e-mail/senha. CPF é obrigatório pra todo aluno sem
+  exceção — conta via Google passa por uma etapa de cadastro completo (não só CPF) antes de
+  existir de fato, com upload de foto (câmera do celular, webcam ao vivo ou arquivo).
+- Cabeçalho mostra "Bem-vindo, {primeiro nome}" quando logado, linkando pra `meus-dados.php`
+  (trocar senha, editar WhatsApp/nascimento/endereço — nome/e-mail/CPF travados).
+- `minha-conta.php` reorganizada: cursos (concluído ou agendado pra quando) e produtos (status de
+  entrega) em seções separadas.
+- `financeiro.php`: boletos parcelados, upload manual pelo administrativo — baixável dentro do
+  prazo, bloqueado se vencido sem pagamento, liberado se pago.
+- `ebook-download.php`: download protegido do PDF comprado, PDF armazenado fora do
+  `public_html` com nome não adivinhável.
+
+**Banco de dados**
+- 10 tabelas criadas no banco de produção MySQL (Hostinger) — `alunos`, `turmas`, `produtos`,
+  `pedidos`, `instrutores`, `administradores`, `certificados`, `cupons`, `gastos`, `boletos` (ver
+  `db/schema.sql`). O site segue lendo/gravando a maior parte em JSON; migrar o código é a
+  próxima fase.
+- Corrigido durante os testes: `cupons`/`boletos`/`certificados` tinham foreign key pra
+  `pedidos`/`alunos` no MySQL, mas pedidos e alunos ainda vivem em JSON — toda tentativa de
+  vincular um cupom/boleto a um pedido real quebrava com erro de integridade. FKs removidas
+  (validação de dono continua feita na aplicação).
+
+**Painel interno da equipe (novo)**
+- `equipe/login.php`: login único pra administrativo/diretor/instrutor, cada um com seu painel.
+- Diretor: cadastra instrutor, administrativo e aluno; upload da própria assinatura.
+- Administrativo: gestão de turmas (criar curso, vagas internas, atribuir instrutor, carga
+  horária), cupons, boletos, gastos (por curso/fixo/variável/patrimônio, com resumo por tipo).
+- Instrutor: vê os próprios dados, upload da própria assinatura.
+- Certificado sempre leva assinatura de 1 diretor + 1 instrutor (imagem se cadastrada, senão
+  nome/profissão/registro em texto) — geração de PDF em si ainda não construída.
+- `tools/sync_agenda.py` atualizado pra preservar vagas/instrutor/código/carga horária ao
+  re-sincronizar (não sobrescreve mais o que o painel administrativo editou).
+- `tools/sync_produtos.py` ganhou suporte a vincular PDF de e-book solto em `produtos_ts_site/`
+  ao produto correspondente, renomeando e movendo pra fora do repositório.

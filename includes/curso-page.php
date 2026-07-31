@@ -6,6 +6,13 @@
  */
 function render_curso_page(string $slug): void
 {
+    require_once __DIR__ . '/csrf.php';
+    require_once __DIR__ . '/contratos.php';
+    require_once __DIR__ . '/env.php';
+    require_once __DIR__ . '/db.php';
+    require_once __DIR__ . '/cupons.php';
+    csrf_ensure_session(); // precisa rodar antes de qualquer saída (header.php já imprime HTML)
+
     $config  = require __DIR__ . '/config.php';
     $version = require __DIR__ . '/version.php';
     $turma   = find_turma($slug);
@@ -24,9 +31,16 @@ function render_curso_page(string $slug): void
 
     [$statusLabel, $statusClass] = turma_status($turma['status']);
     $esgotada = $turma['status'] === 'esgotada';
-    $precoFormatado = format_price((float) $turma['preco']);
     $datasFormatadas = turma_dates_full($turma['datas']);
-    $waMsg = 'Olá! Quero garantir minha vaga no curso "' . $turma['curso'] . '" (' . $datasFormatadas . ').';
+
+    $cupomCodigo = trim($_GET['cupom'] ?? '');
+    $cupom = $cupomCodigo !== '' ? validar_cupom($cupomCodigo, 'curso', $slug) : null;
+    $precoFinal = (float) $turma['preco'];
+    if ($cupom) {
+        $precoFinal -= calcular_desconto_cupom($cupom, (float) $turma['preco']);
+    }
+    $precoFormatado = format_price($precoFinal);
+    $waMsg = 'Olá! A turma "' . $turma['curso'] . '" está esgotada — quero entrar na lista de espera.';
     $waLink = wa_link($config['whatsapp'], $waMsg);
 
     $page_title = $turma['curso'] . ' | ' . $config['site_name'];
@@ -51,19 +65,54 @@ function render_curso_page(string $slug): void
                     <div><dt>📅 Data<?= count($turma['datas']) > 1 ? 's' : '' ?></dt><dd><?= e($datasFormatadas) ?></dd></div>
                     <div><dt>⏱ Horário</dt><dd><?= e($turma['horario']) ?></dd></div>
                     <div><dt>📍 Local</dt><dd><?= e($turma['local']) ?></dd></div>
-                    <div><dt>💰 Investimento</dt><dd class="curso-price-big"><?= e($precoFormatado) ?></dd></div>
+                    <div>
+                        <dt>💰 Investimento</dt>
+                        <dd class="curso-price-big">
+                            <?php if ($cupom): ?>
+                                <span style="text-decoration:line-through;font-size:.75em;color:var(--muted-foreground);"><?= e(format_price((float) $turma['preco'])) ?></span>
+                                <?= e($precoFormatado) ?>
+                                <span class="badge badge-success" style="font-size:.6em;vertical-align:middle;">cupom <?= e($cupom['codigo']) ?> aplicado</span>
+                            <?php else: ?>
+                                <?= e($precoFormatado) ?>
+                            <?php endif; ?>
+                        </dd>
+                    </div>
                 </dl>
 
                 <?php if ($esgotada): ?>
                     <a class="btn btn-muted btn-lg btn-block" href="<?= e($waLink) ?>" target="_blank" rel="noopener">Entrar na lista de espera</a>
                 <?php else: ?>
-                    <a class="btn btn-accent btn-lg btn-block" href="<?= e($waLink) ?>" target="_blank" rel="noopener">Garantir vaga pelo WhatsApp</a>
+                    <form method="post" action="../checkout.php">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="tipo" value="curso" />
+                        <input type="hidden" name="slug" value="<?= e($turma['slug']) ?>" />
+                        <?php if ($cupomCodigo !== ''): ?><input type="hidden" name="cupom" value="<?= e($cupomCodigo) ?>" /><?php endif; ?>
+                        <label class="contrato-check">
+                            <input type="checkbox" name="aceite_contrato" value="1" required />
+                            <span>Li e aceito o <a href="#" data-modal-open="modal-contrato">contrato de prestação de serviços, o termo de LGPD/uso de imagem e o termo de consentimento para práticas com risco de lesão</a>.</span>
+                        </label>
+                        <button type="submit" class="btn btn-accent btn-lg btn-block">Pagar agora (Pix ou cartão)</button>
+                    </form>
                 <?php endif; ?>
                 <p class="curso-note">Vagas limitadas — turmas reduzidas para garantir a qualidade da prática.</p>
                 <p class="curso-back"><a href="../index.php#agenda">← Ver todas as turmas da agenda</a></p>
             </div>
         </div>
     </section>
+
+    <div class="modal-overlay" id="modal-contrato" aria-hidden="true">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-contrato-titulo">
+            <button type="button" class="modal-close" aria-label="Fechar">×</button>
+            <div class="modal-tabs">
+                <button type="button" class="modal-tab-btn is-active" data-tab-target="tab-servicos">Prestação de Serviços</button>
+                <button type="button" class="modal-tab-btn" data-tab-target="tab-lgpd">LGPD e Imagem</button>
+                <button type="button" class="modal-tab-btn" data-tab-target="tab-risco">Consentimento de Risco</button>
+            </div>
+            <div class="modal-tab-panel is-active" id="tab-servicos"><?php render_contrato_prestacao_servicos($config); ?></div>
+            <div class="modal-tab-panel" id="tab-lgpd"><?php render_contrato_lgpd_imagem($config); ?></div>
+            <div class="modal-tab-panel" id="tab-risco"><?php render_contrato_risco_procedimentos($config); ?></div>
+        </div>
+    </div>
 
     <?php
     include __DIR__ . '/footer.php';

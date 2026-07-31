@@ -74,3 +74,51 @@ function turma_dates_full(array $datas): string
     $ultima = array_pop($formatadas);
     return implode(', ', $formatadas) . ' e ' . $ultima;
 }
+
+/**
+ * Escrita usada só pelo painel administrativo (equipe/turmas.php). O site
+ * público e o agente agenda-sync continuam só lendo via load_turmas()/find_turma().
+ */
+function save_turmas(array $turmas): void
+{
+    $path = __DIR__ . '/../data/turmas.json';
+    file_put_contents($path, json_encode(array_values($turmas), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n");
+}
+
+function atualizar_turma(string $slug, array $changes): ?array
+{
+    $turmas = load_turmas();
+    $atualizada = null;
+    foreach ($turmas as &$t) {
+        if ($t['slug'] === $slug) {
+            $t = array_merge($t, $changes);
+            $atualizada = $t;
+            break;
+        }
+    }
+    unset($t);
+    if ($atualizada) {
+        save_turmas($turmas);
+    }
+    return $atualizada;
+}
+
+function criar_turma(array $dados): array
+{
+    $turmas = load_turmas();
+    $turmas[] = $dados;
+    save_turmas($turmas);
+    return $dados;
+}
+
+function remover_turma(string $slug): bool
+{
+    $turmas = load_turmas();
+    $antes = count($turmas);
+    $turmas = array_values(array_filter($turmas, fn ($t) => $t['slug'] !== $slug));
+    if (count($turmas) === $antes) {
+        return false;
+    }
+    save_turmas($turmas);
+    return true;
+}

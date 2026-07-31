@@ -7,6 +7,12 @@
 $base_path = $base_path ?? '';
 $title = $page_title ?? ($config['site_name'] . ' | Capacitação prática para profissionais de saúde');
 $description = $page_description ?? 'Cursos práticos e certificados para enfermeiros e técnicos de saúde em São José do Rio Preto/SP. Turmas reduzidas, professores atuantes no mercado.';
+
+require_once __DIR__ . '/csrf.php';
+require_once __DIR__ . '/storage.php';
+require_once __DIR__ . '/alunos.php';
+csrf_ensure_session();
+$alunoLogadoHeader = !empty($_SESSION['aluno_id']) ? find_aluno_by_id($_SESSION['aluno_id']) : null;
 ?>
 <!doctype html>
 <html lang="pt-BR">
@@ -44,7 +50,11 @@ $description = $page_description ?? 'Cursos práticos e certificados para enferm
                 <li><a href="<?= e($base_path) ?>index.php#agenda">Agenda</a></li>
                 <li><a href="<?= e($base_path) ?>index.php#produtos">Produtos</a></li>
                 <li><a href="<?= e($base_path) ?>index.php#contato">Contato</a></li>
-                <li><a href="#" class="menu-disabled" aria-disabled="true" title="Em breve">Área do Aluno</a></li>
+                <?php if ($alunoLogadoHeader): ?>
+                    <li><a href="<?= e($base_path) ?>meus-dados.php" class="nav-aluno-logado">Bem-vindo, <?= e(primeiro_nome($alunoLogadoHeader['nome'])) ?></a></li>
+                <?php else: ?>
+                    <li><a href="<?= e($base_path) ?>area-do-aluno.php">Área do Aluno</a></li>
+                <?php endif; ?>
             </ul>
         </nav>
 
@@ -60,7 +70,11 @@ $description = $page_description ?? 'Cursos práticos e certificados para enferm
             <li><a href="<?= e($base_path) ?>index.php#agenda">Agenda</a></li>
             <li><a href="<?= e($base_path) ?>index.php#produtos">Produtos</a></li>
             <li><a href="<?= e($base_path) ?>index.php#contato">Contato</a></li>
-            <li><a href="#" class="menu-disabled" aria-disabled="true">Área do Aluno <span class="soon">em breve</span></a></li>
+            <?php if ($alunoLogadoHeader): ?>
+                <li><a href="<?= e($base_path) ?>meus-dados.php" class="nav-aluno-logado">Bem-vindo, <?= e(primeiro_nome($alunoLogadoHeader['nome'])) ?></a></li>
+            <?php else: ?>
+                <li><a href="<?= e($base_path) ?>area-do-aluno.php">Área do Aluno</a></li>
+            <?php endif; ?>
         </ul>
     </div>
 </header>

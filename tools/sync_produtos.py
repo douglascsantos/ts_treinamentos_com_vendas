@@ -52,6 +52,12 @@ VALID_TIPOS = {"card", "kit", "book"}
 TIPOS_DIGITAIS = {"book"}
 DIGITAL_ESTOQUE_PLACEHOLDER = 9999  # nunca exibido — produto digital ignora estoque na UI
 
+# PDF de e-book: fica fora do repositório/public_html (mesmo princípio de
+# segurança de includes/certificados.php) — nunca com o nome original, pra
+# não ficar adivinhável. Liberado só por ebook-download.php, que confere se
+# o pedido é do aluno logado e está pago.
+EBOOKS_PROTEGIDOS_DIR = ROOT.parent / "ts_site_data" / "ebooks_protegidos"
+
 DRY_RUN = "--dry-run" in sys.argv
 
 PRODUTO_PAGE_TEMPLATE = """<?php
@@ -78,6 +84,59 @@ FILENAME_PATTERN_EBOOK_ONLINE = re.compile(
     r"^ebook[_ ]online[_ ](?P<nome>.+?)[_ ]valor(?P<preco>[\d.,]+)$",
     re.IGNORECASE,
 )
+
+
+def parse_pdf_candidate_slug(path: Path) -> str:
+    """Extrai um slug candidato do nome de um PDF de e-book (ex.:
+    'ebook_Anotacao_de_Enfermagem_(10.5 x 14.8 cm)_valor19.90.pdf' ->
+    'anotacao-de-enfermagem'), pra casar com o produto tipo=book já
+    cadastrado pela capa .png. Não tenta extrair preço/tipo do PDF — isso já
+    vem do produto existente."""
+    stem = path.stem
+    stem = re.sub(r"^ebook[_ ]online[_ ]", "", stem, flags=re.IGNORECASE)
+    stem = re.sub(r"^ebook[_ ]", "", stem, flags=re.IGNORECASE)
+    stem = re.sub(r"\([^)]*\)", "", stem)
+    stem = re.sub(r"[_ ]valor[\d.,]+\s*$", "", stem, flags=re.IGNORECASE)
+    return slugify(stem)
+
+
+def sincronizar_ebooks_pdf(by_slug: dict, dry_run: bool) -> tuple[list[str], list[str]]:
+    """Casa PDF solto em produtos_ts_site/ com um produto tipo=book pelo slug
+    (match exato ou um sendo prefixo do outro), move pra fora do repo com
+    nome não adivinhável, e grava produtos[slug]['arquivo_ebook']."""
+    vinculados, avisos = [], []
+    pdfs = [f for f in sorted(PRODUTOS_SRC_DIR.iterdir()) if f.is_file() and f.suffix.lower() == ".pdf"]
+    if not pdfs:
+        return vinculados, avisos
+
+    livros = {slug: p for slug, p in by_slug.items() if p.get("tipo") == "book"}
+
+    if not dry_run:
+        EBOOKS_PROTEGIDOS_DIR.mkdir(parents=True, exist_ok=True)
+
+    for pdf in pdfs:
+        candidato = parse_pdf_candidate_slug(pdf)
+        alvo_slug = None
+        if candidato in livros:
+            alvo_slug = candidato
+        else:
+            for slug in livros:
+                if slug.startswith(candidato) or candidato.startswith(slug):
+                    alvo_slug = slug
+                    break
+
+        if not alvo_slug:
+            avisos.append(f"{pdf.name}: não achei produto tipo=book correspondente (slug candidato '{candidato}') — ignorado.")
+            continue
+
+        import secrets
+        nome_arquivo = f"{alvo_slug}_{secrets.token_hex(8)}.pdf"
+        if not dry_run:
+            (EBOOKS_PROTEGIDOS_DIR / nome_arquivo).write_bytes(pdf.read_bytes())
+        by_slug[alvo_slug]["arquivo_ebook"] = nome_arquivo
+        vinculados.append(f"{pdf.name} -> {alvo_slug} ({nome_arquivo})")
+
+    return vinculados, avisos
 
 
 def parse_filename(path: Path) -> dict | None:
@@ -229,6 +288,10 @@ def main() -> int:
         if not DRY_RUN:
             write_produto_page(slug)
 
+    vinculados_ebooks, avisos_ebooks = sincronizar_ebooks_pdf(by_slug, DRY_RUN)
+    for produto in by_slug.values():
+        produto.setdefault("arquivo_ebook", None)
+
     result = sorted(by_slug.values(), key=lambda p: p["nome"])
 
     if not DRY_RUN:
@@ -250,6 +313,14 @@ def main() -> int:
         print("  Avisos/erros:")
         for e in errors:
             print(f"    - {e}")
+    if vinculados_ebooks:
+        print("  PDFs de e-book vinculados (movidos pra fora do repo, renomeados):")
+        for v in vinculados_ebooks:
+            print(f"    - {v}")
+    if avisos_ebooks:
+        print("  Avisos sobre PDFs de e-book:")
+        for a in avisos_ebooks:
+            print(f"    - {a}")
 
     return 0
 

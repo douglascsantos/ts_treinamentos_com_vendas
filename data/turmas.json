@@ -10,7 +10,12 @@
     "preco": 290.0,
     "status": "aberta",
     "imagem": "diluicoes-e-preparacoes-de-medicamentos.jpg",
-    "descricao": ""
+    "descricao": "",
+    "codigo_turma": "DEPD-2608-01",
+    "carga_horaria": 0,
+    "vagas_total": 0,
+    "vagas_ocupadas": 0,
+    "instrutor_id": null
   },
   {
     "slug": "administracao-de-medicamentos-injetaveis-puncao-venosa-e-coleta-de-sangue",
@@ -23,7 +28,12 @@
     "preco": 650.0,
     "status": "aberta",
     "imagem": "administracao-de-medicamentos-injetaveis-puncao-venosa-e-coleta-de-sangue.jpg",
-    "descricao": ""
+    "descricao": "",
+    "codigo_turma": "ADMI-2608-01",
+    "carga_horaria": 0,
+    "vagas_total": 0,
+    "vagas_ocupadas": 0,
+    "instrutor_id": null
   },
   {
     "slug": "furo-humanizado",
@@ -36,7 +46,12 @@
     "preco": 1450.0,
     "status": "aberta",
     "imagem": "furo-humanizado.jpg",
-    "descricao": ""
+    "descricao": "",
+    "codigo_turma": "FH-2608-01",
+    "carga_horaria": 0,
+    "vagas_total": 0,
+    "vagas_ocupadas": 0,
+    "instrutor_id": null
   },
   {
     "slug": "rotinas-hospitalares",
@@ -49,7 +64,12 @@
     "preco": 1945.0,
     "status": "aberta",
     "imagem": "rotinas-hospitalares.jpg",
-    "descricao": ""
+    "descricao": "",
+    "codigo_turma": "RH-2608-01",
+    "carga_horaria": 0,
+    "vagas_total": 0,
+    "vagas_ocupadas": 0,
+    "instrutor_id": null
   },
   {
     "slug": "plantao-sem-medo",
@@ -62,7 +82,12 @@
     "preco": 120.0,
     "status": "aberta",
     "imagem": "plantao-sem-medo.jpg",
-    "descricao": ""
+    "descricao": "",
+    "codigo_turma": "PSM-2609-01",
+    "carga_horaria": 0,
+    "vagas_total": 0,
+    "vagas_ocupadas": 0,
+    "instrutor_id": null
   },
   {
     "slug": "avaliacao-de-feridas-e-curativos",
@@ -75,6 +100,11 @@
     "preco": 420.0,
     "status": "aberta",
     "imagem": "avaliacao-de-feridas-e-curativos.jpg",
-    "descricao": ""
+    "descricao": "",
+    "codigo_turma": "ADFE-2609-01",
+    "carga_horaria": 0,
+    "vagas_total": 0,
+    "vagas_ocupadas": 0,
+    "instrutor_id": null
   }
 ]

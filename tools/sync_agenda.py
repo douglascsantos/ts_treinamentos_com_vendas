@@ -51,6 +51,20 @@ VALID_STATUS = {"aberta", "ultimas", "esgotada"}
 
 DRY_RUN = "--dry-run" in sys.argv
 
+# Campos que só o painel administrativo (equipe/) mexe — o sync nunca inventa
+# nem apaga esses valores; só preenche um default na primeira vez que o slug aparece.
+ADMIN_MANAGED_KEYS = ("codigo_turma", "carga_horaria", "vagas_total", "vagas_ocupadas", "instrutor_id")
+ADMIN_MANAGED_DEFAULTS = {"codigo_turma": None, "carga_horaria": 0, "vagas_total": 0, "vagas_ocupadas": 0, "instrutor_id": None}
+
+
+def preservar_campos_admin(turma: dict, slug: str, by_slug: dict) -> dict:
+    """Mantém vagas/instrutor/código/carga horária de uma turma já existente
+    (editados pelo painel administrativo) em vez de deixar o sync sobrescrever."""
+    anterior = by_slug.get(slug)
+    for chave in ADMIN_MANAGED_KEYS:
+        turma[chave] = anterior[chave] if anterior and chave in anterior else ADMIN_MANAGED_DEFAULTS[chave]
+    return turma
+
 CURSO_PAGE_TEMPLATE = """<?php
 require __DIR__ . '/../includes/functions.php';
 require __DIR__ . '/../includes/env.php';
@@ -153,6 +167,7 @@ def main() -> int:
             "imagem": image_name,
             "descricao": "",
         }
+        turma = preservar_campos_admin(turma, slug, by_slug)
         (updated if slug in by_slug else added).append(slug)
         by_slug[slug] = turma
         if not DRY_RUN:
@@ -210,6 +225,7 @@ def main() -> int:
             "preco": preco, "status": status, "imagem": image_name,
             "descricao": fields.get("descricao", ""),
         }
+        turma = preservar_campos_admin(turma, slug, by_slug)
         (updated if slug in by_slug else added).append(slug)
         by_slug[slug] = turma
         if not DRY_RUN:

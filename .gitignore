@@ -8,3 +8,11 @@ secret.env
 agenda/
 produtos_ts_site/
 __pycache__/
+data/pedidos.json
+data/alunos.json
+data/webhook.log
+data/certificados/
+data/fotos_alunos/
+data/boletos/
+data/assinaturas/
+data/ebooks_protegidos/

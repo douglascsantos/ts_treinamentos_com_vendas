@@ -62,6 +62,13 @@ include __DIR__ . '/includes/header.php';
             <p class="muted">Garanta sua vaga com antecedência. As turmas são reduzidas para máxima qualidade prática.</p>
         </div>
 
+        <div class="agenda-overview">
+            <a href="assets/images/agenda-geral-ago-set-2026.jpg" target="_blank" rel="noopener">
+                <img src="assets/images/agenda-geral-ago-set-2026.jpg" alt="Visão geral da agenda de cursos — Agosto e Setembro de 2026" loading="lazy" />
+            </a>
+            <p class="agenda-overview-caption">Visão geral da agenda de Agosto e Setembro — toque na imagem para ampliar</p>
+        </div>
+
         <div class="course-grid">
             <?php foreach ($turmas as $t):
                 [$label, $statusClass] = turma_status($t['status']);

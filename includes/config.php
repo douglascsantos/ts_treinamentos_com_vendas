@@ -13,4 +13,9 @@ return [
     'instagram'  => 'https://www.instagram.com/tstreinamentos_/',
     'instagram_handle' => '@tstreinamentos_',
     'maps_embed' => 'https://www.google.com/maps?q=Rua+Gast%C3%A3o+Vidigal,+2150+-+Santos+Dumont,+S%C3%A3o+Jos%C3%A9+do+Rio+Preto+-+SP&output=embed',
+
+    // InfiniteTag (não é segredo — aparece publicamente na URL de checkout gerada,
+    // ex.: checkout.infinitepay.io/teles-santos-ensino-rp). Por isso vive aqui e
+    // não em secret.env.
+    'infinitepay_handle' => 'teles-santos-ensino-rp',
 ];
