@@ -287,3 +287,21 @@ cadastro mais limpas no celular. Regra nova e permanente: **nunca excluímos nad
   `.equipe-form-row` (`includes/equipe.php`), 1 coluna no celular e 2 colunas iguais a partir de
   480px. Também aumentado o alvo de toque de "Desabilitar"/"Reativar" pra 44px e adicionado
   reforço `[hidden]` em `.toggle-form` (mesmo padrão do `.mobile-nav`, ver v2.1.0).
+- **Correção de acesso**: `equipe/instrutores.php` e `equipe/administradores.php` (recém-separadas
+  de dentro de `equipe/diretor.php` nesta mesma versão) ficaram sem a checagem `nivel === 'diretor'`
+  que a página-irmã `alunos.php` já tinha — uma conta `administrativo` conseguia editar qualquer
+  administrador (inclusive a si mesma, se autopromovendo a diretor) e cadastrar instrutor, o que
+  deveria ser exclusivo do diretor. Pego pela revisão do `deploy-check` antes de qualquer coisa ir
+  pro ar; corrigido adicionando o mesmo bloqueio de `alunos.php` nas duas telas.
+
+## v2.2.1 — "Clara" — 2026-07-31
+
+- **`tools/sync_agenda.py`** não preservava o campo `ativo` (novo na v2.2.0) ao re-sincronizar uma
+  turma a partir da pasta `agenda/` — o dict novo montado pelo script nunca definia esse campo, e
+  como o resto do código trata a ausência de `ativo` como "ativo por padrão", uma turma desabilitada
+  pelo painel administrativo voltaria a aparecer no site sozinha na próxima sincronização, sem
+  ninguém reativar de propósito. Adicionado `ativo` em `ADMIN_MANAGED_KEYS`/`ADMIN_MANAGED_DEFAULTS`
+  (mesmo padrão já usado pra vagas/instrutor/código/carga horária) — agora o sync sempre preserva o
+  valor que o administrativo definiu. Pego pelo `deploy-check` como achado não-bloqueante na v2.2.0;
+  corrigido em seguida por proteger diretamente a política "nunca excluir, só inativar" dessa mesma
+  versão.

@@ -53,8 +53,8 @@ DRY_RUN = "--dry-run" in sys.argv
 
 # Campos que só o painel administrativo (equipe/) mexe — o sync nunca inventa
 # nem apaga esses valores; só preenche um default na primeira vez que o slug aparece.
-ADMIN_MANAGED_KEYS = ("codigo_turma", "carga_horaria", "vagas_total", "vagas_ocupadas", "instrutor_id")
-ADMIN_MANAGED_DEFAULTS = {"codigo_turma": None, "carga_horaria": 0, "vagas_total": 0, "vagas_ocupadas": 0, "instrutor_id": None}
+ADMIN_MANAGED_KEYS = ("codigo_turma", "carga_horaria", "vagas_total", "vagas_ocupadas", "instrutor_id", "ativo")
+ADMIN_MANAGED_DEFAULTS = {"codigo_turma": None, "carga_horaria": 0, "vagas_total": 0, "vagas_ocupadas": 0, "instrutor_id": None, "ativo": True}
 
 
 def preservar_campos_admin(turma: dict, slug: str, by_slug: dict) -> dict:
