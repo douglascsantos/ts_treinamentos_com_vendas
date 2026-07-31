@@ -219,9 +219,10 @@ function equipe_header_html(string $titulo, string $nomeExibido): void
 
 function equipe_footer_html(): void
 {
+    $version = require __DIR__ . '/version.php';
     ?>
 </div>
-<script src="../assets/js/main.js" defer></script>
+<script src="../assets/js/main.js?v=<?= e($version['version']) ?>" defer></script>
 </body>
 </html>
     <?php

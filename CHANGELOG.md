@@ -373,3 +373,19 @@ Dois achados não-bloqueantes do `deploy-check` na v2.3.0, corrigidos em seguida
 - `gerar_backup_banco_zip()` (`includes/backups.php`) só apagava o `.sql` temporário no caminho de
   sucesso — se o `ZipArchive` falhasse no meio, o arquivo temporário ficava perdido na pasta temp do
   servidor. Envolvido num `try/finally` pra sempre limpar, dê certo ou não.
+
+## v2.3.2 — "Nova" — 2026-07-31
+
+Dois bugs reportados pelo cliente: menu do painel não abria, e logout não levava pra home.
+
+- **Botão "☰ Menu" do painel da equipe não abria** — `equipe_footer_html()` carregava
+  `assets/js/main.js` sem parâmetro de cache (`?v=...`), diferente do rodapé do site público que já
+  tinha esse cuidado desde sempre. `main.js` foi editado várias vezes nesta sessão (inclusive pra
+  adicionar o próprio código do menu); sem versionamento na URL, o navegador podia estar servindo uma
+  cópia antiga em cache, de antes desse código existir — o clique não fazia nada, sem erro visível,
+  porque o `addEventListener` do botão nunca chegava a ser registrado. Corrigido adicionando
+  `?v=<?= $version['version'] ?>` no `<script>` do painel, igual ao site público.
+- **Logout (aluno e equipe) não voltava pra página inicial** — `logout.php` mandava o aluno de volta
+  pra `area-do-aluno.php` (tela de login) e `equipe/logout.php` mandava a equipe pra `equipe/login.php`.
+  Agora os dois redirecionam pra raiz do site (`/`), já deslogado — pedido explícito do cliente pra
+  que ninguém saia direto numa tela de login depois de sair da conta.
