@@ -26,6 +26,22 @@ Login para o aluno acessar, depois da compra:
   mesmo arquivo de referência acima documenta como funcionava).
 - Assistir aulas disponíveis online (conteúdo em vídeo).
 
+## 0. Agente de produtos (curto prazo — próximo item a construir)
+
+O carrossel "Produtos TS Treinamentos" (cards, kits de treinamento e books) já está pronto no
+site (`includes/produtos.php`, `includes/produto-page.php`, seção em `index.php`, CSS em
+`assets/css/style.css`), lendo de `data/produtos.json` — mas esse arquivo está vazio, então a
+seção fica oculta até ter conteúdo. Falta:
+- Definir junto com o cliente o formato de conteúdo em `produtos_ts_site/` (pasta local, fora do
+  git, já criada) — provavelmente algo parecido com o padrão de `agenda/` (nome do arquivo
+  codificando produto/tipo/preço/estoque, ou pasta + `dados.txt`).
+- Construir o agente `produtos-sync` (espelhando `.claude/agents/agenda-sync.md` e
+  `tools/sync_agenda.py`) que processa `produtos_ts_site/`, gera as imagens, atualiza
+  `data/produtos.json` e cria a página de venda em `produtos/{slug}.php`.
+- Depois que houver produtos reais publicados, adicionar "Produtos" ao menu principal
+  (`includes/header.php`) apontando para `#produtos` — não foi adicionado ainda de propósito,
+  para não deixar um link de menu apontando pra uma seção vazia/inexistente.
+
 ## 3. CRM / área administrativa
 
 Painel interno para a equipe (não para o aluno), com controle de acesso por função — cada

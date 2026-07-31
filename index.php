@@ -1,8 +1,7 @@
 <?php
 require __DIR__ . '/includes/functions.php';
-require __DIR__ . '/includes/env.php';
 require __DIR__ . '/includes/turmas.php';
-require __DIR__ . '/includes/instagram.php';
+require __DIR__ . '/includes/produtos.php';
 $config  = require __DIR__ . '/includes/config.php';
 $version = require __DIR__ . '/includes/version.php';
 
@@ -13,10 +12,14 @@ $version = require __DIR__ . '/includes/version.php';
  */
 $turmas = load_turmas();
 
-/** Vitrine de fotos/vídeos — feed do Instagram quando configurado
- *  (ver includes/instagram.php e INSTAGRAM_SETUP.md), com fallback estático
- *  para fotos reais do site caso não haja token configurado ou a API falhe. */
-$galeria = get_instagram_gallery($config);
+/**
+ * Produtos TS Treinamentos (cards, kits de treinamento, books) — vem de
+ * data/produtos.json. Ainda vazio: o conteúdo é preparado em produtos_ts_site/
+ * (pasta local, fora do git) e publicado por um agente de sincronização
+ * dedicado (a construir — ver ROADMAP.md). A seção só aparece quando houver
+ * produtos cadastrados.
+ */
+$produtos = load_produtos();
 
 include __DIR__ . '/includes/header.php';
 ?>
@@ -94,31 +97,33 @@ include __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<section class="section section-gallery">
+<?php if (!empty($produtos)): ?>
+<section id="produtos" class="section section-produtos">
     <div class="container">
-        <div class="section-head gallery-head">
-            <div>
-                <p class="eyebrow">Nossa rotina</p>
-                <h2>Acompanhe no Instagram</h2>
-            </div>
-            <a class="gallery-link" href="<?= e($config['instagram']) ?>" target="_blank" rel="noopener"><?= e($config['instagram_handle']) ?> ↗</a>
+        <div class="section-head">
+            <p class="eyebrow">Loja TS Treinamentos</p>
+            <h2>Produtos TS Treinamentos</h2>
+            <p class="muted">Cards, kits de treinamento e books sobre cada tema, direto da nossa equipe.</p>
         </div>
     </div>
-    <div class="gallery-scroll" role="list">
-        <?php foreach ($galeria as $g):
-            $tag = $g['link'] ? 'a' : 'div';
+    <div class="produtos-scroll" role="list">
+        <?php foreach ($produtos as $p):
+            [$statusLabel, $statusClass] = produto_status((int) $p['estoque']);
+            $paginaProduto = 'produtos/' . $p['slug'] . '.php';
         ?>
-            <<?= $tag ?> class="gallery-item" role="listitem"<?php if ($g['link']): ?> href="<?= e($g['link']) ?>" target="_blank" rel="noopener"<?php endif; ?>>
-                <img src="<?= e($g['img']) ?>" alt="<?= e($g['alt']) ?>" loading="lazy" />
-                <?php if (in_array($g['type'], ['reel', 'video'], true)): ?>
-                    <span class="gallery-play" aria-hidden="true">▶</span>
-                <?php elseif ($g['type'] === 'story'): ?>
-                    <span class="gallery-badge">Story</span>
-                <?php endif; ?>
-            </<?= $tag ?>>
+            <a class="produto-item" role="listitem" href="<?= e($paginaProduto) ?>">
+                <img src="assets/images/produtos/<?= e($p['imagem']) ?>" alt="<?= e($p['nome']) ?>" loading="lazy" />
+                <span class="course-status <?= e($statusClass) ?> produto-status"><?= e($statusLabel) ?></span>
+                <span class="produto-info">
+                    <span class="produto-tipo"><?= e(produto_tipo_label($p['tipo'])) ?></span>
+                    <span class="produto-nome"><?= e($p['nome']) ?></span>
+                    <span class="produto-preco"><?= e(format_price((float) $p['preco'])) ?></span>
+                </span>
+            </a>
         <?php endforeach; ?>
     </div>
 </section>
+<?php endif; ?>
 
 <section id="sobre" class="section section-about">
     <div class="container about-grid">

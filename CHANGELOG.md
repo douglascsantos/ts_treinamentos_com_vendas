@@ -61,3 +61,26 @@ conteúdo real, e cada curso ganha sua própria página de venda.
   Curativos. Os 6 cursos fictícios usados como placeholder na v0.0.x foram removidos.
 - `deploy-check` atualizado para cobrir o novo escopo (JSON de dados, páginas de curso, cache do
   Instagram, segurança do token).
+
+## v1.0.0 — "Avelã" — 2026-07-29
+
+Primeira versão oficial fora da fase de protótipo (dígito PROTOTIPO passa de `0` para `1` —
+ver `includes/version.php`). O rótulo "Protótipo" foi removido do rodapé.
+
+- **Carrossel do Instagram removido**: a integração via Graph API (`includes/instagram.php`,
+  `INSTAGRAM_SETUP.md`, cache, campos `INSTAGRAM_*` em `secret.env`) foi descontinuada a pedido —
+  não deu pra validar em produção antes de mudar de direção. O ícone/link do Instagram no rodapé
+  (rede social simples, sem API) continua normalmente.
+- **Novo carrossel "Produtos TS Treinamentos"** no lugar: cards, kits de treinamento e books.
+  Arquitetura pronta (`includes/produtos.php`, `includes/produto-page.php`, seção condicional em
+  `index.php`, `data/produtos.json`, páginas individuais em `produtos/{slug}.php`, imagens em
+  `assets/images/produtos/`) — mas **sem conteúdo ainda**: a seção fica automaticamente oculta
+  até `data/produtos.json` ter produtos cadastrados.
+- Nova pasta local `produtos_ts_site/` (fora do git, no `.gitignore`) para o dono do site
+  preparar fotos/dados dos produtos, no mesmo espírito de `agenda/`. O agente que processa essa
+  pasta (`produtos-sync`) ainda não foi construído — registrado em `ROADMAP.md` como próximo
+  passo de curto prazo.
+- `format_price()` centralizado em `includes/functions.php` (antes vivia só em
+  `includes/turmas.php`), agora compartilhado entre turmas e produtos.
+- `deploy-check` atualizado: escopo agora cobre `produtos/` e `data/produtos.json`, removida a
+  checagem específica de segurança do token do Instagram (não existe mais nesse código).

@@ -14,3 +14,12 @@ function wa_link(string $whatsapp, string $message = ''): string
     }
     return $url;
 }
+
+/** Preço formatado em R$ pt-BR. Compartilhado entre turmas e produtos. */
+function format_price(float $preco): string
+{
+    if ($preco <= 0) {
+        return 'Gratuito';
+    }
+    return 'R$ ' . number_format($preco, 2, ',', '.');
+}

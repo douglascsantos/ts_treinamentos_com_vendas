@@ -74,12 +74,3 @@ function turma_dates_full(array $datas): string
     $ultima = array_pop($formatadas);
     return implode(', ', $formatadas) . ' e ' . $ultima;
 }
-
-/** Preço formatado em R$ pt-BR. */
-function format_price(float $preco): string
-{
-    if ($preco <= 0) {
-        return 'Gratuito';
-    }
-    return 'R$ ' . number_format($preco, 2, ',', '.');
-}
