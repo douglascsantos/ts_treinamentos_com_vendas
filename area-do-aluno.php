@@ -7,7 +7,7 @@
 require __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/storage.php';
 require __DIR__ . '/includes/alunos.php';
-require __DIR__ . '/includes/pedidos.php';
+require __DIR__ . '/includes/checkout_helper.php';
 require __DIR__ . '/includes/env.php';
 require __DIR__ . '/includes/db.php';
 require __DIR__ . '/includes/administradores.php';
@@ -37,6 +37,7 @@ if (!empty($_SESSION['aluno_id'])) {
     if ($orderNsu !== '') {
         vincular_pedido_aluno($orderNsu, $_SESSION['aluno_id']);
     }
+    checkout_retomar_se_pendente($config);
     header('Location: minha-conta.php');
     exit;
 }
@@ -61,6 +62,7 @@ if ($acao === 'login') {
             if ($orderNsu !== '') {
                 vincular_pedido_aluno($orderNsu, $aluno['id']);
             }
+            checkout_retomar_se_pendente($config);
             header('Location: minha-conta.php');
             exit;
         }
@@ -163,6 +165,7 @@ if ($acao === 'cadastro') {
         if ($orderNsu !== '') {
             vincular_pedido_aluno($orderNsu, $aluno['id']);
         }
+        checkout_retomar_se_pendente($config);
         header('Location: minha-conta.php?novo=1');
         exit;
     }
@@ -178,6 +181,9 @@ include __DIR__ . '/includes/header.php';
         <div class="section-head" style="text-align:center;max-width:none;">
             <p class="eyebrow">Área do Aluno</p>
             <h2>Entre na sua conta ou cadastre-se</h2>
+            <?php if (isset($_GET['retomar_compra']) && !empty($_SESSION['checkout_pendente'])): ?>
+                <p class="lead-muted">Falta só um passo: entre ou crie sua conta pra finalizar sua compra de <strong><?= e($_SESSION['checkout_pendente']['tipo'] === 'curso' ? (find_turma($_SESSION['checkout_pendente']['slug'])['curso'] ?? 'seu pedido') : (find_produto($_SESSION['checkout_pendente']['slug'])['nome'] ?? 'seu pedido')) ?></strong> — assim que confirmar, você vai direto pro pagamento.</p>
+            <?php endif; ?>
         </div>
 
         <div class="auth-grid" style="margin-top:2.5rem;">

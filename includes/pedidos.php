@@ -47,7 +47,10 @@ function gerar_order_nsu(): string
  * Cria um novo pedido com status "pendente" e retorna o registro criado.
  * $dados deve ter: tipo (curso|produto), slug, descricao, preco (float), e
  * opcionalmente aceite_contrato_em / aceite_contrato_ip (registro do aceite
- * eletrônico dos contratos, feito no checkout — ver checkout.php).
+ * eletrônico dos contratos, feito no checkout — ver checkout.php) e aluno_id
+ * (o site exige login antes do pagamento — ver includes/checkout_helper.php
+ * — então normalmente já vem preenchido; fica opcional só por segurança/
+ * compatibilidade, nunca deve ficar nulo na prática).
  */
 function criar_pedido(array $dados): array
 {
@@ -55,7 +58,7 @@ function criar_pedido(array $dados): array
 
     $pedido = [
         'order_nsu'           => gerar_order_nsu(),
-        'aluno_id'             => null,
+        'aluno_id'             => $dados['aluno_id'] ?? null,
         'tipo'                 => $dados['tipo'],
         'slug'                 => $dados['slug'],
         'descricao'            => $dados['descricao'],

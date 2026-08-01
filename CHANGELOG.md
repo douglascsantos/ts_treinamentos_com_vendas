@@ -478,3 +478,41 @@ validar_cpf()" — a mensagem coerente da v2.3.4 revelou a causa real na hora.
   (cookie + tempo que o PHP mantém no servidor), com `HttpOnly` e `SameSite=Lax` (reforço de
   segurança, não deixa o cookie ser lido por JavaScript nem enviado em requisição de outro site).
   Verificado localmente que o cookie de sessão sai com `Max-Age=14400` (4h) corretamente.
+
+## v2.5.0 — "Nova" — 2026-08-01
+
+Mudança de fundo no funil de compra: conta de aluno agora é exigida ANTES do pagamento (era depois).
+Isso permite mandar e-mail de confirmação de compra pro endereço certo assim que o pagamento é
+aprovado, e mostrar direto a informação relevante (e-book liberado / turma matriculada) na volta.
+
+**Cadastro antes do pagamento**
+- Clicar em "Pagar agora" sem estar logado não vai mais direto pro link de pagamento — o aceite do
+  contrato já é registrado nesse clique (mesma regra de sempre, nada muda aí), mas a compra fica
+  guardada esperando login/cadastro (`$_SESSION['checkout_pendente']`) e a pessoa é levada pra Área
+  do Aluno com um aviso: "Falta só um passo: entre ou crie sua conta pra finalizar sua compra de
+  {item} — assim que confirmar, você vai direto pro pagamento."
+- **Sem clique extra**: assim que o login, o cadastro ou o login com Google terminam com sucesso, a
+  compra pendente é retomada sozinha e a pessoa já cai direto no link de pagamento — não precisa
+  voltar na página do curso/produto pra clicar em "Pagar agora" de novo.
+- Núcleo do checkout foi extraído de `checkout.php` pra `includes/checkout_helper.php`
+  (`processar_checkout()`), reaproveitado tanto por quem já está logado quanto por quem acabou de
+  logar/cadastrar — mesma lógica de validação de curso/produto/cupom/estoque de sempre, sem
+  mudança de comportamento nesse núcleo.
+- `criar_pedido()` agora recebe o `aluno_id` na hora de criar o pedido (antes sempre nascia nulo e
+  só era vinculado depois via `vincular_pedido_aluno()` — essa função continua existindo, como rede
+  de segurança pra links antigos/casos legados, mas deixa de ser o caminho principal).
+
+**E-mail de confirmação de compra**
+- Novo `includes/email.php` — envia por `mail()` nativo do PHP (hospedagem compartilhada, sem SMTP
+  dedicado configurado). Disparado por `webhook-infinitepay.php` assim que o pagamento é confirmado
+  de verdade (nunca antes, nunca sem essa confirmação — mesma regra de segurança que já existia pra
+  marcar como pago). Falha no envio nunca derruba a resposta do webhook nem o fluxo de pagamento —
+  só fica registrado no log.
+
+**Página de retorno do pagamento mais informativa**
+- `pagamento-concluido.php`: como o aluno já está logado nesse ponto, a tela some com o antigo CTA
+  "Entre ou crie sua conta" e mostra direto o que interessa — e-book já liberado com botão de
+  download, ou a turma em que foi matriculado (data, horário, local). Se o webhook ainda não chegou
+  (pagamento aparece "pendente" por alguns segundos), mostra aviso pra atualizar a página em vez de
+  informação errada. Checagem de dono do pedido (nunca mostra detalhe de pedido de outra pessoa só
+  por adivinhar o número na URL).

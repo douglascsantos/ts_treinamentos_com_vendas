@@ -9,11 +9,14 @@
 require __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/storage.php';
 require __DIR__ . '/../includes/alunos.php';
-require __DIR__ . '/../includes/pedidos.php';
+require __DIR__ . '/../includes/checkout_helper.php';
 require __DIR__ . '/../includes/env.php';
+require __DIR__ . '/../includes/db.php';
 require __DIR__ . '/../includes/csrf.php';
 require __DIR__ . '/../includes/google_oauth.php';
 csrf_ensure_session();
+
+$config = require __DIR__ . '/../includes/config.php';
 
 $expectedState = $_SESSION['google_oauth_state'] ?? null;
 $orderNsu = $_SESSION['google_oauth_order_nsu'] ?? '';
@@ -67,5 +70,6 @@ if ($orderNsu !== '') {
     vincular_pedido_aluno($orderNsu, $aluno['id']);
 }
 
+checkout_retomar_se_pendente($config);
 header('Location: /minha-conta.php');
 exit;

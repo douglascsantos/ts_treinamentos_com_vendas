@@ -9,10 +9,14 @@
 require __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/storage.php';
 require __DIR__ . '/../includes/alunos.php';
-require __DIR__ . '/../includes/pedidos.php';
+require __DIR__ . '/../includes/checkout_helper.php';
 require __DIR__ . '/../includes/fotos.php';
+require __DIR__ . '/../includes/env.php';
+require __DIR__ . '/../includes/db.php';
 require __DIR__ . '/../includes/csrf.php';
 csrf_ensure_session();
+
+$config = require __DIR__ . '/../includes/config.php';
 
 $pendente = $_SESSION['google_pending'] ?? null;
 if (!$pendente) {
@@ -109,12 +113,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($orderNsu !== '') {
             vincular_pedido_aluno($orderNsu, $aluno['id']);
         }
+        checkout_retomar_se_pendente($config);
         header('Location: /minha-conta.php?novo=1');
         exit;
     }
 }
 
-$config  = require __DIR__ . '/../includes/config.php';
 $version = require __DIR__ . '/../includes/version.php';
 $page_title = 'Complete seu cadastro | ' . $config['site_name'];
 $base_path = '../';

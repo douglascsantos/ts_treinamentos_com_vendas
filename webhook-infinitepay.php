@@ -15,6 +15,8 @@ require __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/storage.php';
 require __DIR__ . '/includes/pedidos.php';
 require __DIR__ . '/includes/infinitepay.php';
+require __DIR__ . '/includes/alunos.php';
+require __DIR__ . '/includes/email.php';
 
 $config = require __DIR__ . '/includes/config.php';
 
@@ -77,7 +79,7 @@ if (!$confirmacao['paid']) {
     webhook_responder(200, ['success' => true, 'note' => 'payment_check says not paid']);
 }
 
-atualizar_pedido($orderNsu, [
+$pedidoPago = atualizar_pedido($orderNsu, [
     'status'          => 'pago',
     'transaction_nsu' => $transactionNsu,
     'invoice_slug'    => $invoiceSlug,
@@ -86,4 +88,18 @@ atualizar_pedido($orderNsu, [
 ]);
 
 webhook_log("Pedido {$orderNsu} confirmado como PAGO ({$captureMethod}).");
+
+// E-mail de confirmação — nunca bloqueia a resposta do webhook (a InfinitePay
+// espera resposta rápida) nem derruba o fluxo se o envio falhar.
+if ($pedidoPago && !empty($pedidoPago['aluno_id'])) {
+    $aluno = find_aluno_by_id($pedidoPago['aluno_id']);
+    if ($aluno) {
+        try {
+            enviar_email_compra_confirmada($aluno, $pedidoPago);
+        } catch (Throwable $e) {
+            webhook_log("Falha ao enviar e-mail de confirmação pra {$orderNsu}: " . $e->getMessage());
+        }
+    }
+}
+
 webhook_responder(200, ['success' => true]);
