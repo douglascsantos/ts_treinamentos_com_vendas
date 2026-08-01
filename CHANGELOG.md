@@ -432,3 +432,19 @@ problema de verdade, tanto pro cliente quanto pra mim tentar diagnosticar à dis
   e `equipe/produtos.php`.
 - Com isso, na próxima tentativa a mensagem de erro deve mostrar exatamente o que está impedindo o
   cadastro do instrutor — se continuar acontecendo, a mensagem em si já vai apontar a causa.
+
+## v2.4.0 — "Nova" — 2026-08-01
+
+Nova tela pro diretor/administrativo: vendas de produtos.
+
+- **`equipe/vendas.php`** (novo): lista todo pedido de produto (card/kit/e-book) — aluno, produto,
+  número do pedido, data, preço — com status do pagamento e status do envio editáveis direto na
+  linha (dois selects + Salvar). Produto digital (e-book) não mostra opção de envio — a entrega é o
+  próprio download, sempre liberado assim que o pagamento é confirmado.
+- O que for salvo aqui aparece na hora pro aluno em `minha-conta.php`, porque é o mesmo registro de
+  pedido lido nos dois lugares — não duplica dado em lugar nenhum.
+- Status do pagamento normalmente já vem certo sozinho pelo webhook da InfinitePay; a edição manual
+  aqui serve pra correção pontual (ex.: pagamento combinado fora do gateway).
+- Nova constante compartilhada `PEDIDO_STATUS_LABELS` (`includes/pedidos.php`) — `minha-conta.php`
+  passou a reaproveitar em vez de ter sua própria cópia dos mesmos rótulos.
+- Link "Vendas" adicionado no menu do painel e nos dashboards do diretor/administrativo.

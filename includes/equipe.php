@@ -56,6 +56,7 @@ function equipe_header_html(string $titulo, string $nomeExibido): void
         }
         $itensMenu[] = ['href' => 'turmas.php', 'label' => 'Turmas', 'icone' => '📅'];
         $itensMenu[] = ['href' => 'produtos.php', 'label' => 'Produtos', 'icone' => '🛍️'];
+        $itensMenu[] = ['href' => 'vendas.php', 'label' => 'Vendas', 'icone' => '📦'];
         $itensMenu[] = ['href' => 'agenda.php', 'label' => 'Imagens da agenda', 'icone' => '🖼️'];
         $itensMenu[] = ['href' => 'cupons.php', 'label' => 'Cupons', 'icone' => '🏷️'];
         $itensMenu[] = ['href' => 'boletos.php', 'label' => 'Boletos', 'icone' => '🧾'];

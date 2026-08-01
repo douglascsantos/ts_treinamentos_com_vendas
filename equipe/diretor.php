@@ -68,6 +68,10 @@ equipe_header_html('Painel do Diretor', $staff['nome'] . ' (diretor)');
         <span class="equipe-dash-card-icon" aria-hidden="true">🛍️</span>
         <div><h4>Produtos</h4><p>Cards, kits e e-books — cadastrar, editar, desabilitar/reativar.</p></div>
     </a>
+    <a class="equipe-dash-card" href="vendas.php">
+        <span class="equipe-dash-card-icon" aria-hidden="true">📦</span>
+        <div><h4>Vendas</h4><p>Pedidos de produtos: status de pagamento e envio.</p></div>
+    </a>
     <a class="equipe-dash-card" href="agenda.php">
         <span class="equipe-dash-card-icon" aria-hidden="true">🖼️</span>
         <div><h4>Imagens da agenda</h4><p>Até 3 imagens com legenda na home, desabilitar/reativar.</p></div>

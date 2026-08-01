@@ -7,10 +7,19 @@
 
 const PEDIDOS_FILE = 'pedidos.json';
 
+/** Status do pagamento — normalmente setado automaticamente pelo webhook da InfinitePay, mas o
+ *  administrativo pode corrigir manualmente em equipe/vendas.php (ex.: pagamento combinado fora do
+ *  gateway). */
+const PEDIDO_STATUS_LABELS = [
+    'pendente' => ['Pagamento pendente', 'status-last'],
+    'pago'     => ['Pago', 'status-open'],
+    'erro'     => ['Erro no pagamento', 'status-out'],
+];
+
 /**
  * Status de entrega — só faz sentido pra pedido de produto físico (kit/card,
- * não e-book) já pago. Quem atualiza é o administrativo (painel ainda não
- * construído — ver ROADMAP.md); aqui só o rótulo/classe CSS pra exibir.
+ * não e-book) já pago. Editável pelo administrativo/diretor em
+ * equipe/vendas.php; aqui só o rótulo/classe CSS pra exibir.
  */
 const STATUS_ENTREGA_LABELS = [
     'enviado'   => ['Enviado por transportadora', 'status-last'],
@@ -89,6 +98,14 @@ function pedidos_pagos_por_turma(string $turmaSlug): array
         fn ($p) => ($p['tipo'] ?? '') === 'curso' && ($p['slug'] ?? '') === $turmaSlug
             && ($p['status'] ?? '') === 'pago' && !empty($p['aluno_id'])
     ));
+}
+
+/** Todos os pedidos de produto (não curso), mais recentes primeiro — pro painel do administrativo/diretor (ver equipe/vendas.php). */
+function listar_pedidos_de_produtos(): array
+{
+    $pedidos = array_values(array_filter(load_pedidos(), fn ($p) => ($p['tipo'] ?? '') === 'produto'));
+    usort($pedidos, fn ($a, $b) => strcmp($b['criado_em'] ?? '', $a['criado_em'] ?? ''));
+    return $pedidos;
 }
 
 /** Todos os pedidos vinculados a um aluno (ver vincular_pedido_aluno), mais recentes primeiro. */

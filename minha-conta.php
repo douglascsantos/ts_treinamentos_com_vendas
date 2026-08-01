@@ -44,11 +44,7 @@ try {
     $certificados = [];
 }
 
-$statusLabels = [
-    'pendente' => ['Pagamento pendente', 'status-last'],
-    'pago'     => ['Pago', 'status-open'],
-    'erro'     => ['Erro no pagamento', 'status-out'],
-];
+$statusLabels = PEDIDO_STATUS_LABELS;
 
 /** Situação de um pedido de curso já pago: concluído ou agendado pra quando. */
 function situacao_curso_pago(array $pedido): array
