@@ -37,34 +37,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar_
             'whatsapp'        => $_POST['whatsapp'] ?? '',
         ];
         $senha = (string) ($_POST['senha'] ?? '');
-        $existente = $id !== '' ? find_instrutor_by_id($id) : null;
 
-        if ($d['nome_completo'] === '' || $d['formacao'] === '') {
-            $erros[] = 'Preencha nome completo e formação.';
-        } elseif (!validar_cpf($d['cpf'])) {
-            $erros[] = 'CPF inválido.';
-        } elseif (!array_key_exists($d['area_atuacao'], AREAS_ATUACAO_INSTRUTOR)) {
-            $erros[] = 'Selecione a área de atuação.';
-        } elseif (!filter_var($d['email'], FILTER_VALIDATE_EMAIL)) {
-            $erros[] = 'E-mail inválido.';
-        } elseif (!$existente && strlen($senha) < 8) {
-            $erros[] = 'Senha precisa ter pelo menos 8 caracteres.';
-        }
+        try {
+            $existente = $id !== '' ? find_instrutor_by_id($id) : null;
+            $cpfDuplicado = validar_cpf($d['cpf']) ? find_instrutor_by_cpf($d['cpf']) : null;
+            $emailDuplicado = filter_var($d['email'], FILTER_VALIDATE_EMAIL) ? find_instrutor_by_email($d['email']) : null;
 
-        if (!$erros && $id !== '' && $existente) {
-            atualizar_instrutor($id, [
-                'nome_completo'   => $d['nome_completo'],
-                'formacao'        => $d['formacao'],
-                'cpf'             => preg_replace('/\D/', '', $d['cpf']),
-                'area_atuacao'    => $d['area_atuacao'],
-                'numero_registro' => $d['numero_registro'] !== '' ? $d['numero_registro'] : null,
-                'email'           => mb_strtolower(trim($d['email'])),
-                'whatsapp'        => preg_replace('/\D/', '', $d['whatsapp']),
-            ]);
-            $mensagens[] = 'Instrutor atualizado.';
-        } elseif (!$erros) {
-            criar_instrutor(array_merge($d, ['senha' => $senha]));
-            $mensagens[] = 'Instrutor cadastrado.';
+            if ($d['nome_completo'] === '' || $d['formacao'] === '') {
+                $erros[] = 'Preencha nome completo e formação.';
+            } elseif (!validar_cpf($d['cpf'])) {
+                $erros[] = 'CPF inválido.';
+            } elseif ($cpfDuplicado && (!$existente || $cpfDuplicado['id'] !== $existente['id'])) {
+                $erros[] = 'Já existe um instrutor cadastrado com esse CPF.';
+            } elseif (!array_key_exists($d['area_atuacao'], AREAS_ATUACAO_INSTRUTOR)) {
+                $erros[] = 'Selecione a área de atuação.';
+            } elseif (!filter_var($d['email'], FILTER_VALIDATE_EMAIL)) {
+                $erros[] = 'E-mail inválido.';
+            } elseif ($emailDuplicado && (!$existente || $emailDuplicado['id'] !== $existente['id'])) {
+                $erros[] = 'Já existe um instrutor cadastrado com esse e-mail.';
+            } elseif (!$existente && strlen($senha) < 8) {
+                $erros[] = 'Senha precisa ter pelo menos 8 caracteres.';
+            }
+
+            if (!$erros) {
+                if ($id !== '' && $existente) {
+                    atualizar_instrutor($id, [
+                        'nome_completo'   => $d['nome_completo'],
+                        'formacao'        => $d['formacao'],
+                        'cpf'             => preg_replace('/\D/', '', $d['cpf']),
+                        'area_atuacao'    => $d['area_atuacao'],
+                        'numero_registro' => $d['numero_registro'] !== '' ? $d['numero_registro'] : null,
+                        'email'           => mb_strtolower(trim($d['email'])),
+                        'whatsapp'        => preg_replace('/\D/', '', $d['whatsapp']),
+                    ]);
+                    $mensagens[] = 'Instrutor atualizado.';
+                } else {
+                    criar_instrutor(array_merge($d, ['senha' => $senha]));
+                    $mensagens[] = 'Instrutor cadastrado.';
+                }
+            }
+        } catch (Throwable $e) {
+            $erros[] = 'Não foi possível salvar — tente novamente em instantes.';
         }
 
         if (!$erros) {
@@ -83,8 +96,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($_POST['acao'] ?? '', ['de
 }
 
 $editando = null;
-if (isset($_GET['editar'])) {
-    $editando = find_instrutor_by_id($_GET['editar']);
+$erroBanco = false;
+try {
+    if (isset($_GET['editar'])) {
+        $editando = find_instrutor_by_id($_GET['editar']);
+    }
+    $instrutores = listar_instrutores();
+} catch (Throwable $e) {
+    $erroBanco = true;
+    $instrutores = [];
 }
 
 $valores = $editando ?: [
@@ -101,13 +121,14 @@ if ($erros && isset($_POST['nome_completo'])) {
 }
 $formAberto = $editando !== null || (bool) $erros;
 
-$instrutores = listar_instrutores();
-
 equipe_header_html('Instrutores', $staff['nome']);
 ?>
 
 <p style="margin-bottom:1.25rem;"><a href="diretor.php">← Painel do diretor</a></p>
 
+<?php if ($erroBanco): ?>
+    <div class="form-errors-box">Não foi possível conectar ao banco agora — tente recarregar a página em instantes.</div>
+<?php endif; ?>
 <?php foreach ($mensagens as $m): ?>
     <div class="form-errors-box" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#15803d;"><?= e($m) ?></div>
 <?php endforeach; ?>

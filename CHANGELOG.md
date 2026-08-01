@@ -389,3 +389,28 @@ Dois bugs reportados pelo cliente: menu do painel não abria, e logout não leva
   pra `area-do-aluno.php` (tela de login) e `equipe/logout.php` mandava a equipe pra `equipe/login.php`.
   Agora os dois redirecionam pra raiz do site (`/`), já deslogado — pedido explícito do cliente pra
   que ninguém saia direto numa tela de login depois de sair da conta.
+
+## v2.3.3 — "Nova" — 2026-08-01
+
+Cliente reportou erro 500 ao tentar cadastrar aluno, produto e instrutor pela tela do diretor.
+Causa raiz real encontrada e corrigida: **cadastro de instrutor (e administrador) não checava CPF/
+e-mail duplicado antes de gravar** — diferente do cadastro de aluno, que já tinha essa checagem.
+Como `cpf` e `email` são colunas `UNIQUE` no banco, tentar cadastrar um CPF/e-mail que já existe
+(bem provável ao testar o formulário mais de uma vez) disparava uma exceção do banco sem tratamento
+nenhum — e isso vira, na prática, exatamente um erro 500.
+
+- `equipe/instrutores.php`: adicionada checagem de CPF/e-mail duplicado antes de salvar (mensagem
+  amigável em vez de estourar), usando nova função `find_instrutor_by_cpf()` (`includes/instrutores.php`).
+- `equipe/administradores.php`: mesma checagem pra e-mail duplicado (tinha o mesmo problema).
+- Toda a lógica de salvar (checagem de duplicado + `criar_*`/`atualizar_*`) nas duas telas agora está
+  dentro de um `try/catch` — qualquer outra falha do banco (fora do ar, timeout) também vira mensagem
+  amigável em vez de tela quebrada.
+- **Revisão mais ampla, como pedido**: `equipe/instrutores.php`, `equipe/administradores.php` e
+  `equipe/turmas.php` (que também carrega instrutores/administradores pros campos de responsável)
+  chamavam `listar_instrutores()`/`listar_administradores()` sem nenhuma proteção — se o banco
+  estivesse fora do ar por qualquer motivo, a tela inteira quebrava (nem a lista aparecia). Agora as
+  três mostram um aviso "não foi possível conectar" e continuam funcionando com o que der pra
+  mostrar, em vez de tela em branco com erro.
+- `equipe/alunos.php` e `equipe/produtos.php`: cadastro/edição já funcionava certo em teste local
+  fiel (dado novo, sem duplicata), mas ganhou o mesmo `try/catch` de proteção por precaução —
+  qualquer falha inesperada de gravação agora vira mensagem amigável, nunca mais uma tela de erro 500.

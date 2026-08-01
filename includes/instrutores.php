@@ -33,6 +33,14 @@ function find_instrutor_by_id(string $id): ?array
     return $row ?: null;
 }
 
+function find_instrutor_by_cpf(string $cpf): ?array
+{
+    $stmt = db()->prepare('SELECT * FROM instrutores WHERE cpf = ? LIMIT 1');
+    $stmt->execute([preg_replace('/\D/', '', $cpf)]);
+    $row = $stmt->fetch();
+    return $row ?: null;
+}
+
 function listar_instrutores(): array
 {
     return db()->query('SELECT * FROM instrutores ORDER BY criado_em DESC')->fetchAll();

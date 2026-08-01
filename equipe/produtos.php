@@ -64,12 +64,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar_
                 }
             }
             if (!$erros) {
-                atualizar_produto($editando['slug'], [
-                    'nome' => $nome, 'tipo' => $tipo, 'preco' => $preco,
-                    'estoque' => $digital ? 9999 : $estoque, 'imagem' => $imagemNome,
-                    'descricao' => $descricao, 'arquivo_ebook' => $digital ? $arquivoEbook : null,
-                ]);
-                $mensagens[] = 'Produto atualizado.';
+                try {
+                    atualizar_produto($editando['slug'], [
+                        'nome' => $nome, 'tipo' => $tipo, 'preco' => $preco,
+                        'estoque' => $digital ? 9999 : $estoque, 'imagem' => $imagemNome,
+                        'descricao' => $descricao, 'arquivo_ebook' => $digital ? $arquivoEbook : null,
+                    ]);
+                    $mensagens[] = 'Produto atualizado.';
+                } catch (Throwable $e) {
+                    $erros[] = 'Não foi possível salvar — tente novamente em instantes.';
+                }
             }
         } elseif (!$erros) {
             $slug = slugify($nome);
@@ -94,16 +98,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar_
                     }
 
                     if (!$erros) {
-                        criar_produto([
-                            'slug' => $slug, 'nome' => $nome, 'tipo' => $tipo, 'preco' => $preco,
-                            'estoque' => $digital ? 9999 : $estoque, 'imagem' => $imagemNome,
-                            'descricao' => $descricao, 'arquivo_ebook' => $arquivoEbook, 'ativo' => true,
-                        ]);
-                        $paginaTemplate = "<?php\nrequire __DIR__ . '/../includes/functions.php';\n"
-                            . "require __DIR__ . '/../includes/produtos.php';\nrequire __DIR__ . '/../includes/produto-page.php';\n"
-                            . "render_produto_page('{$slug}');\n";
-                        file_put_contents(__DIR__ . '/../produtos/' . $slug . '.php', $paginaTemplate);
-                        $mensagens[] = 'Produto "' . $nome . '" criado.';
+                        try {
+                            criar_produto([
+                                'slug' => $slug, 'nome' => $nome, 'tipo' => $tipo, 'preco' => $preco,
+                                'estoque' => $digital ? 9999 : $estoque, 'imagem' => $imagemNome,
+                                'descricao' => $descricao, 'arquivo_ebook' => $arquivoEbook, 'ativo' => true,
+                            ]);
+                            $paginaTemplate = "<?php\nrequire __DIR__ . '/../includes/functions.php';\n"
+                                . "require __DIR__ . '/../includes/produtos.php';\nrequire __DIR__ . '/../includes/produto-page.php';\n"
+                                . "render_produto_page('{$slug}');\n";
+                            file_put_contents(__DIR__ . '/../produtos/' . $slug . '.php', $paginaTemplate);
+                            $mensagens[] = 'Produto "' . $nome . '" criado.';
+                        } catch (Throwable $e) {
+                            $erros[] = 'Não foi possível salvar — tente novamente em instantes.';
+                        }
                     }
                 }
             }

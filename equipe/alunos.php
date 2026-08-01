@@ -58,8 +58,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'criar_a
         } elseif (strlen($d['senha']) < 8) {
             $erros[] = 'Senha precisa ter pelo menos 8 caracteres.';
         } else {
-            criar_aluno($d);
-            $mensagens[] = 'Aluno cadastrado.';
+            try {
+                criar_aluno($d);
+                $mensagens[] = 'Aluno cadastrado.';
+            } catch (Throwable $e) {
+                $erros[] = 'Não foi possível salvar — tente novamente em instantes.';
+            }
         }
 
         if (!$erros) {

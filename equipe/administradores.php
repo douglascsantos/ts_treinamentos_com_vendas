@@ -30,24 +30,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar_
         $email = trim($_POST['email'] ?? '');
         $nivel = $_POST['nivel'] ?? 'administrativo';
         $senha = (string) ($_POST['senha'] ?? '');
-        $existente = $id !== '' ? find_administrador_by_id($id) : null;
 
-        if ($nome === '') {
-            $erros[] = 'Informe o nome.';
-        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $erros[] = 'E-mail inválido.';
-        } elseif (!in_array($nivel, ['administrativo', 'diretor'], true)) {
-            $erros[] = 'Nível inválido.';
-        } elseif (!$existente && strlen($senha) < 8) {
-            $erros[] = 'Senha precisa ter pelo menos 8 caracteres.';
-        }
+        try {
+            $existente = $id !== '' ? find_administrador_by_id($id) : null;
+            $emailDuplicado = filter_var($email, FILTER_VALIDATE_EMAIL) ? find_administrador_by_email($email) : null;
 
-        if (!$erros && $id !== '' && $existente) {
-            atualizar_administrador($id, ['nome' => $nome, 'email' => mb_strtolower($email), 'nivel' => $nivel]);
-            $mensagens[] = 'Conta atualizada.';
-        } elseif (!$erros) {
-            criar_administrador(['nome' => $nome, 'email' => $email, 'senha' => $senha, 'nivel' => $nivel]);
-            $mensagens[] = 'Conta cadastrada.';
+            if ($nome === '') {
+                $erros[] = 'Informe o nome.';
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $erros[] = 'E-mail inválido.';
+            } elseif ($emailDuplicado && (!$existente || $emailDuplicado['id'] !== $existente['id'])) {
+                $erros[] = 'Já existe uma conta cadastrada com esse e-mail.';
+            } elseif (!in_array($nivel, ['administrativo', 'diretor'], true)) {
+                $erros[] = 'Nível inválido.';
+            } elseif (!$existente && strlen($senha) < 8) {
+                $erros[] = 'Senha precisa ter pelo menos 8 caracteres.';
+            }
+
+            if (!$erros) {
+                if ($id !== '' && $existente) {
+                    atualizar_administrador($id, ['nome' => $nome, 'email' => mb_strtolower($email), 'nivel' => $nivel]);
+                    $mensagens[] = 'Conta atualizada.';
+                } else {
+                    criar_administrador(['nome' => $nome, 'email' => $email, 'senha' => $senha, 'nivel' => $nivel]);
+                    $mensagens[] = 'Conta cadastrada.';
+                }
+            }
+        } catch (Throwable $e) {
+            $erros[] = 'Não foi possível salvar — tente novamente em instantes.';
         }
 
         if (!$erros) {
@@ -73,8 +83,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($_POST['acao'] ?? '', ['de
 }
 
 $editando = null;
-if (isset($_GET['editar'])) {
-    $editando = find_administrador_by_id($_GET['editar']);
+$erroBanco = false;
+try {
+    if (isset($_GET['editar'])) {
+        $editando = find_administrador_by_id($_GET['editar']);
+    }
+    $administradores = listar_administradores();
+} catch (Throwable $e) {
+    $erroBanco = true;
+    $administradores = [];
 }
 
 $valores = $editando ?: ['id' => '', 'nome' => '', 'email' => '', 'nivel' => 'administrativo'];
@@ -83,12 +100,14 @@ if ($erros && isset($_POST['nome']) && ($_POST['acao'] ?? '') === 'salvar_admini
 }
 $formAberto = $editando !== null || (($_POST['acao'] ?? '') === 'salvar_administrador' && $erros);
 
-$administradores = listar_administradores();
-
 equipe_header_html('Administradores', $staff['nome']);
 ?>
 
 <p style="margin-bottom:1.25rem;"><a href="diretor.php">← Painel do diretor</a></p>
+
+<?php if ($erroBanco): ?>
+    <div class="form-errors-box">Não foi possível conectar ao banco agora — tente recarregar a página em instantes.</div>
+<?php endif; ?>
 
 <?php foreach ($mensagens as $m): ?>
     <div class="form-errors-box" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#15803d;"><?= e($m) ?></div>
