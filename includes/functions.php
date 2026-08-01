@@ -43,6 +43,37 @@ function primeiro_nome(string $nomeCompleto): string
     return $partes[0] ?? '';
 }
 
+function normalizar_cpf(string $cpf): string
+{
+    return preg_replace('/\D/', '', $cpf) ?? '';
+}
+
+/**
+ * Validação do dígito verificador do CPF (mesmo algoritmo já usado no site
+ * antigo). Fica em functions.php (não em includes/alunos.php) porque também
+ * é usada por equipe/instrutores.php — CPF é conceito genérico, não
+ * exclusivo de aluno; um bug real (função indisponível ali, "Call to
+ * undefined function") já veio dessa mistura antes.
+ */
+function validar_cpf(string $cpf): bool
+{
+    $cpf = normalizar_cpf($cpf);
+    if (strlen($cpf) !== 11 || preg_match('/^(\d)\1{10}$/', $cpf)) {
+        return false;
+    }
+    for ($t = 9; $t < 11; $t++) {
+        $d = 0;
+        for ($c = 0; $c < $t; $c++) {
+            $d += (int) $cpf[$c] * (($t + 1) - $c);
+        }
+        $d = ((10 * $d) % 11) % 10;
+        if ((int) $cpf[$t] !== $d) {
+            return false;
+        }
+    }
+    return true;
+}
+
 /**
  * Reordena uma lista deixando os itens ativos primeiro (dentro de cada grupo,
  * mantém a ordem original — usort é estável desde o PHP 8). Usado pelas

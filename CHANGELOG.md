@@ -448,3 +448,33 @@ Nova tela pro diretor/administrativo: vendas de produtos.
 - Nova constante compartilhada `PEDIDO_STATUS_LABELS` (`includes/pedidos.php`) — `minha-conta.php`
   passou a reaproveitar em vez de ter sua própria cópia dos mesmos rótulos.
 - Link "Vendas" adicionado no menu do painel e nos dashboards do diretor/administrativo.
+
+## v2.4.1 — "Nova" — 2026-08-01
+
+Cliente reportou não conseguir cadastrar instrutor: "Erro técnico: Call to undefined function
+validar_cpf()" — a mensagem coerente da v2.3.4 revelou a causa real na hora.
+
+- **Bug real, provavelmente presente desde que `equipe/instrutores.php` foi criado nesta sessão**:
+  a validação de CPF (`validar_cpf()`) vivia só em `includes/alunos.php`, que `equipe/instrutores.php`
+  nunca carregava — todo cadastro de instrutor sempre ia quebrar nessa linha, primeiro como erro 500
+  puro (antes da v2.3.3), depois com a mensagem "tente novamente" genérica (v2.3.3), e só ficou
+  visível de verdade com o `equipe_erro_tecnico()` da v2.3.4. `equipe/alunos.php` nunca teve esse
+  problema porque já carregava `includes/alunos.php` de propósito.
+  - Corrigido na raiz: `validar_cpf()`/`normalizar_cpf()` mudaram de `includes/alunos.php` pra
+    `includes/functions.php` — CPF não é conceito exclusivo de aluno (instrutor também tem), e
+    `functions.php` é carregado em toda página do site, então a função fica disponível em qualquer
+    lugar sem precisar lembrar de um require extra.
+  - **Auditoria adicional**: escrevi um script que usa o tokenizer do PHP pra conferir, em todo
+    `equipe/*.php` e nas principais páginas públicas, se alguma função chamada não está declarada
+    em nenhum dos `require`s do próprio arquivo (a mesma classe de bug, que `php -l` nunca pegaria
+    por ser erro de runtime, não de sintaxe). Rodou limpo em todo o resto do site — esse era o único
+    caso.
+- **Revisão do processo de sessão/login** (pedido do cliente — relatos de "erro de sessão"):
+  `includes/csrf.php` nunca configurava duração de sessão nem parâmetros do cookie, então o site
+  dependia do padrão do PHP na hospedagem — em compartilhado isso costuma ser bem curto
+  (`session.gc_maxlifetime` ~24min é comum). Preencher um cadastro longo (endereço, foto) ou deixar
+  o painel da equipe aberto trabalhando por mais tempo que isso faz a sessão sumir no meio, e o
+  próximo clique cai em "sessão expirada" do nada. Corrigido: sessão agora dura 4h de propósito
+  (cookie + tempo que o PHP mantém no servidor), com `HttpOnly` e `SameSite=Lax` (reforço de
+  segurança, não deixa o cookie ser lido por JavaScript nem enviado em requisição de outro site).
+  Verificado localmente que o cookie de sessão sai com `Max-Age=14400` (4h) corretamente.

@@ -52,31 +52,6 @@ function save_alunos(array $alunos): void
     storage_write_json(ALUNOS_FILE, $alunos);
 }
 
-function normalizar_cpf(string $cpf): string
-{
-    return preg_replace('/\D/', '', $cpf) ?? '';
-}
-
-/** Validação do dígito verificador do CPF (mesmo algoritmo já usado no site antigo). */
-function validar_cpf(string $cpf): bool
-{
-    $cpf = normalizar_cpf($cpf);
-    if (strlen($cpf) !== 11 || preg_match('/^(\d)\1{10}$/', $cpf)) {
-        return false;
-    }
-    for ($t = 9; $t < 11; $t++) {
-        $d = 0;
-        for ($c = 0; $c < $t; $c++) {
-            $d += (int) $cpf[$c] * (($t + 1) - $c);
-        }
-        $d = ((10 * $d) % 11) % 10;
-        if ((int) $cpf[$t] !== $d) {
-            return false;
-        }
-    }
-    return true;
-}
-
 function normalizar_whatsapp(string $whatsapp): string
 {
     return preg_replace('/\D/', '', $whatsapp) ?? '';
