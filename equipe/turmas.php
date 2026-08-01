@@ -257,12 +257,12 @@ if ($editando) {
 $formAberto = $editando !== null || (bool) $erros;
 
 $turmas = ordenar_ativos_primeiro(load_turmas(), 'turma_ativa');
-$erroBanco = false;
+$erroBanco = null;
 try {
     $instrutores = listar_instrutores();
     $administradores = listar_administradores();
 } catch (Throwable $e) {
-    $erroBanco = true;
+    $erroBanco = equipe_erro_tecnico($e);
     $instrutores = [];
     $administradores = [];
 }
@@ -281,7 +281,7 @@ equipe_header_html('Turmas', $staff['nome']);
 <?php if ($staff['nivel'] === 'diretor'): ?><p style="margin-bottom:1.25rem;"><a href="diretor.php">← Painel do diretor</a></p><?php endif; ?>
 
 <?php if ($erroBanco): ?>
-    <div class="form-errors-box">Não foi possível carregar instrutores/administradores agora (banco fora do ar) — a lista de turmas continua abaixo, mas os campos de responsável podem estar vazios. Tente recarregar em instantes.</div>
+    <div class="form-errors-box">Não foi possível carregar instrutores/administradores agora — a lista de turmas continua abaixo, mas os campos de responsável podem estar vazios. <?= e($erroBanco) ?></div>
 <?php endif; ?>
 <?php foreach ($mensagens as $m): ?>
     <div class="form-errors-box" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#15803d;"><?= e($m) ?></div>

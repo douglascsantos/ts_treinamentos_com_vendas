@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'criar_a
                 criar_aluno($d);
                 $mensagens[] = 'Aluno cadastrado.';
             } catch (Throwable $e) {
-                $erros[] = 'Não foi possível salvar — tente novamente em instantes.';
+                $erros[] = equipe_erro_tecnico($e);
             }
         }
 

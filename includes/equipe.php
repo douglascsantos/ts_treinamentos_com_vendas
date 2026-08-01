@@ -6,6 +6,19 @@
  * WhatsApp flutuante): é ferramenta interna, não página de venda.
  */
 
+/**
+ * Mensagem de erro coerente pro painel interno — só staff autenticado vê
+ * (nunca o site público), então mostrar o motivo técnico real (em vez de um
+ * genérico "tente novamente") ajuda a pessoa a entender o problema (ex.: CPF
+ * já cadastrado com formatação diferente, banco fora do ar) sem precisar
+ * pedir pra mim investigar. Mensagem de exceção do PDO não inclui
+ * credencial/host — só SQLSTATE + o que o driver do banco reportou.
+ */
+function equipe_erro_tecnico(Throwable $e): string
+{
+    return 'Erro técnico: ' . $e->getMessage();
+}
+
 /** Chamado sempre de dentro de equipe/*.php — links relativos assumem esse diretório. */
 function equipe_exigir_login(array $tiposPermitidos): array
 {

@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar_
                 }
             }
         } catch (Throwable $e) {
-            $erros[] = 'Não foi possível salvar — tente novamente em instantes.';
+            $erros[] = equipe_erro_tecnico($e);
         }
 
         if (!$erros) {
@@ -96,14 +96,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($_POST['acao'] ?? '', ['de
 }
 
 $editando = null;
-$erroBanco = false;
+$erroBanco = null;
 try {
     if (isset($_GET['editar'])) {
         $editando = find_instrutor_by_id($_GET['editar']);
     }
     $instrutores = listar_instrutores();
 } catch (Throwable $e) {
-    $erroBanco = true;
+    $erroBanco = equipe_erro_tecnico($e);
     $instrutores = [];
 }
 
@@ -127,7 +127,7 @@ equipe_header_html('Instrutores', $staff['nome']);
 <p style="margin-bottom:1.25rem;"><a href="diretor.php">← Painel do diretor</a></p>
 
 <?php if ($erroBanco): ?>
-    <div class="form-errors-box">Não foi possível conectar ao banco agora — tente recarregar a página em instantes.</div>
+    <div class="form-errors-box">Não foi possível conectar ao banco agora. <?= e($erroBanco) ?></div>
 <?php endif; ?>
 <?php foreach ($mensagens as $m): ?>
     <div class="form-errors-box" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#15803d;"><?= e($m) ?></div>

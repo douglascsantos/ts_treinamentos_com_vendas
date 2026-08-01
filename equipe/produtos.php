@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar_
                     ]);
                     $mensagens[] = 'Produto atualizado.';
                 } catch (Throwable $e) {
-                    $erros[] = 'Não foi possível salvar — tente novamente em instantes.';
+                    $erros[] = equipe_erro_tecnico($e);
                 }
             }
         } elseif (!$erros) {
@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'salvar_
                             file_put_contents(__DIR__ . '/../produtos/' . $slug . '.php', $paginaTemplate);
                             $mensagens[] = 'Produto "' . $nome . '" criado.';
                         } catch (Throwable $e) {
-                            $erros[] = 'Não foi possível salvar — tente novamente em instantes.';
+                            $erros[] = equipe_erro_tecnico($e);
                         }
                     }
                 }

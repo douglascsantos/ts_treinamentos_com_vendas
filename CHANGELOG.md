@@ -414,3 +414,21 @@ nenhum — e isso vira, na prática, exatamente um erro 500.
 - `equipe/alunos.php` e `equipe/produtos.php`: cadastro/edição já funcionava certo em teste local
   fiel (dado novo, sem duplicata), mas ganhou o mesmo `try/catch` de proteção por precaução —
   qualquer falha inesperada de gravação agora vira mensagem amigável, nunca mais uma tela de erro 500.
+
+## v2.3.4 — "Nova" — 2026-08-01
+
+Cliente ainda via "tente novamente em instantes" ao tentar cadastrar instrutor mesmo depois da
+v2.3.3 — a correção anterior parou o erro 500, mas a mensagem genérica escondia qual era o
+problema de verdade, tanto pro cliente quanto pra mim tentar diagnosticar à distância.
+
+- **Nova `equipe_erro_tecnico()`** (`includes/equipe.php`): as telas do painel interno (só staff
+  logado, nunca o site público) agora mostram o motivo técnico real do erro em vez de um genérico
+  "tente novamente" — ex.: CPF/e-mail já cadastrado, ou o erro exato que o banco devolveu. Mensagem
+  de exceção do PDO não inclui credencial/host, só o código do erro e o que o driver do banco
+  reportou, então é seguro mostrar pra um administrador autenticado.
+- Aplicado em todos os `try/catch` adicionados na v2.3.3: `equipe/instrutores.php`,
+  `equipe/administradores.php`, `equipe/turmas.php` (inclusive o aviso de "banco fora do ar" ao
+  carregar a lista de instrutores/administrativos pros campos de responsável), `equipe/alunos.php`
+  e `equipe/produtos.php`.
+- Com isso, na próxima tentativa a mensagem de erro deve mostrar exatamente o que está impedindo o
+  cadastro do instrutor — se continuar acontecendo, a mensagem em si já vai apontar a causa.
