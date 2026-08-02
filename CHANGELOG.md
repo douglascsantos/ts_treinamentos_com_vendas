@@ -703,3 +703,23 @@ diário rotativo.
   CageFS). Comando a cadastrar:
   `php /home/u885171151/domains/tstreinamento.com/public_html/tools/monitoramento_diario.php --modo=completo`,
   uma vez por dia.
+
+## v2.8.1 — "Nova" — 2026-08-02
+
+Duas mudanças pedidas pelo cliente, direto em produção via SSH: limpeza dos dados de teste
+acumulados durante os testes desta sessão, e sessão de usuário mais curta.
+
+- **Sessão de aluno/equipe reduzida de 4h pra 2h** (`SESSAO_VIDA_SEGUNDOS`, `includes/csrf.php`) —
+  depois desse tempo parado, a pessoa precisa logar de novo (já era o comportamento padrão ao
+  expirar, só o tempo mudou).
+- **Limpeza de dados de teste em produção**: todos os alunos (3, incluindo contas usadas pra testar
+  o checkout nesta sessão) e todos os pedidos (8, todos de teste) foram apagados do armazenamento
+  ao vivo (`ts_site_data/alunos.json`/`pedidos.json`, fora do repositório — não passa por deploy).
+  Backup dos 3 arquivos (`alunos.json`, `pedidos.json`, `produtos.json`) feito antes, salvo em
+  `ts_site_data/backups/pre-limpeza-2026-08-02/`, por segurança.
+- **Produto "teste" removido de vez** (não só desativado — nunca foi um produto real de catálogo,
+  só existia pra testar o mínimo de valor da InfinitePay, ver v2.5.2/v2.6.0): removido do
+  armazenamento ao vivo, da semente versionada (`data/produtos.json`) e apagada a página
+  `produtos/teste.php` — precisa sair da semente também, senão a importação automática da v2.6.0
+  (que reimporta qualquer slug da semente ausente do catálogo ao vivo) traria ele de volta sozinho
+  no próximo carregamento.

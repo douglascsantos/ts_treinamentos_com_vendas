@@ -11,7 +11,7 @@
  * comum de "erro de sessão"/"sessão expirada" aparecendo do nada no meio de
  * um formulário longo ou depois de um tempo parado numa tela.
  */
-const SESSAO_VIDA_SEGUNDOS = 4 * 60 * 60; // 4h
+const SESSAO_VIDA_SEGUNDOS = 2 * 60 * 60; // 2h — pedido explícito do cliente; depois disso a pessoa precisa logar de novo.
 
 function csrf_ensure_session(): void
 {
