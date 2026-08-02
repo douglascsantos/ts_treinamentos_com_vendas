@@ -660,3 +660,46 @@ suficiente, virou um problema visual real.
   dentro da lista (ficava junto dos outros itens clicáveis, causando parte da confusão visual) e virou
   um rótulo separado, sem ação, logo acima do link "Área do Aluno" (que agora leva pra
   `minha-conta.php`, igual ao botão do desktop — antes esse texto "Bem-vindo" é que fazia esse papel).
+
+## v2.8.0 — "Nova" — 2026-08-02
+
+Pedido do cliente: acesso SSH à Hostinger habilitado e testado (confirmado funcionando, com uma
+chave dedicada instalada pra automação não depender da senha) — usado pra construir monitoramento
+automático de produção: banco de dados, API da InfinitePay, varredura de segurança básica e backup
+diário rotativo.
+
+- **`tools/monitoramento_diario.php`** (novo, só roda via linha de comando — nunca por HTTP, mesmo
+  que alguém acesse a URL direto): confirma que o banco de dados responde, testa a API da
+  InfinitePay (sem gerar pedido/link nenhum de verdade, só confirma que ela responde), varre todo
+  `.php` do site atrás de padrões conhecidos de backdoor/webshell (eval de conteúdo ofuscado,
+  chamada de função vinda direto de `$_GET`/`$_POST`, `assert()`/`create_function()`/`preg_replace`
+  com `/e`, comando de shell alimentado por entrada do usuário) e confere se algum arquivo
+  rastreado pelo Git foi alterado direto no servidor fora do fluxo normal de deploy (git push) —
+  um jeito simples de perceber se algo mexeu no código sem passar pelo processo normal.
+- **Backup diário rotativo**: gera backup do banco (.sql zipado) e do site (.zip do repositório,
+  reaproveitando `gerar_backup_banco_zip()`/`gerar_backup_site_zip()` que já existiam pro botão sob
+  demanda em `equipe/perfil.php`) e salva em `ts_site_data/backups/` (fora do repositório, nunca
+  baixável por URL) — 7 arquivos por tipo, um por dia da semana (`backup-site-segunda.zip` ...
+  `backup-site-domingo.zip`), sobrescrito automaticamente na semana seguinte.
+- **Alerta só quando tem problema de verdade** (sem spam diário): se algo for encontrado, manda
+  e-mail pra douglas.santos.mat@gmail.com com assunto "ALERTA {nível} de segurança" (nível
+  baixo/médio/alto conforme a gravidade) e um aviso mais resumido pra todo diretor cadastrado e
+  ativo no site. Sem problema encontrado, só registra em log
+  (`ts_site_data/monitoramento.log`) — sem e-mail.
+- **`deploy-check` atualizado**: depois de um push bem-sucedido, agora espera 2 minutos, confirma
+  via SSH que o commit realmente chegou no servidor, e roda esse mesmo script em modo rápido (sem
+  gerar backup — isso é coisa do cron diário, não de cada deploy) como verificação pós-deploy.
+- **Achado real corrigido durante o teste**: a varredura de segurança acusava falso positivo nela
+  mesma quando testada sob um nome de arquivo diferente (o script contém, como texto, os próprios
+  padrões que procura) — a exclusão de si mesmo comparava caminho fixo (`tools/monitoramento_diario.php`)
+  em vez do arquivo de verdade; corrigido comparando `realpath()` contra `__FILE__`, funciona
+  independente de nome/cópia.
+- Testado direto na produção via SSH (não só localmente, que não tem acesso ao banco): banco OK,
+  InfinitePay OK, varredura limpa nos arquivos reais do site, backup do site e do banco gerados e
+  nomeados corretamente pro dia da semana certo, e-mail de alerta e aviso a diretor confirmados
+  disparando quando havia achado.
+- **Pendente, fora do meu alcance por SSH**: agendar a execução diária precisa ser feita pelo
+  hPanel (Avançado → Cron Jobs) — o shell da Hostinger não expõe `crontab` (ambiente restrito por
+  CageFS). Comando a cadastrar:
+  `php /home/u885171151/domains/tstreinamento.com/public_html/tools/monitoramento_diario.php --modo=completo`,
+  uma vez por dia.
