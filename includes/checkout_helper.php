@@ -147,20 +147,26 @@ function processar_checkout(array $config, string $alunoId, array $intent): void
         marcar_cupom_usado($cupom['codigo'], $pedido['order_nsu']);
     }
 
-    // Cupom cobriu o valor inteiro (ex.: 100% de desconto, ou valor fixo maior
-    // que o preço) — não sobra nada pra cobrar na InfinitePay. Antes disso não
-    // era tratado à parte: caía direto em infinitepay_create_link() com
-    // price_centavos 0, que a InfinitePay rejeita — aparecendo pro cliente
-    // como "Não foi possível iniciar o pagamento" mesmo com um cupom válido.
-    // Aqui confirma o pedido na hora, sem gateway, igual o webhook faria.
-    if ($precoComDesconto <= 0) {
+    $precoComDescontoCentavos = (int) round($precoComDesconto * 100);
+
+    // A InfinitePay recusa qualquer link com valor total abaixo de
+    // INFINITEPAY_VALOR_MINIMO_CENTAVOS (R$1,00) — confirmado testando a API
+    // real, não é só o caso de cupom zerando o preço 100%: um cupom que deixa
+    // só alguns centavos, ou (bem mais raro) o próprio preço de catálogo
+    // sendo menor que R$1, caem no mesmo problema. Antes disso não era
+    // tratado à parte: caía direto em infinitepay_create_link(), que a
+    // InfinitePay rejeita — aparecendo pro cliente como "Não foi possível
+    // iniciar o pagamento" mesmo com tudo certo do nosso lado. Como o valor
+    // que sobraria pra cobrar é tão baixo que não compensa cobrança manual,
+    // confirma o pedido na hora, sem gateway, igual o webhook faria.
+    if ($precoComDescontoCentavos < INFINITEPAY_VALOR_MINIMO_CENTAVOS) {
         $pedidoPago = atualizar_pedido($pedido['order_nsu'], ['status' => 'pago']) ?? $pedido;
         $aluno = find_aluno_by_id($alunoId);
         if ($aluno) {
             try {
                 enviar_email_compra_confirmada($aluno, $pedidoPago);
             } catch (Throwable $e) {
-                checkout_log("Falha ao enviar e-mail de confirmação (pedido gratuito via cupom) pra {$pedido['order_nsu']}: " . $e->getMessage());
+                checkout_log("Falha ao enviar e-mail de confirmação (pedido abaixo do mínimo da InfinitePay) pra {$pedido['order_nsu']}: " . $e->getMessage());
             }
         }
         header('Location: ' . site_base_url() . '/pagamento-concluido.php?order_nsu=' . rawurlencode($pedido['order_nsu']));
@@ -171,7 +177,7 @@ function processar_checkout(array $config, string $alunoId, array $intent): void
         $config['infinitepay_handle'],
         [
             'quantity'       => 1,
-            'price_centavos' => (int) round($precoComDesconto * 100),
+            'price_centavos' => $precoComDescontoCentavos,
             'description'    => $descricao,
         ],
         $pedido['order_nsu'],

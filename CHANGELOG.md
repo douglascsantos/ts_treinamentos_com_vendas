@@ -538,3 +538,23 @@ exatamente esse erro:
   qualquer falha real da InfinitePay ao gerar o link de pagamento agora fica registrada com a
   resposta completa da API, pra não precisar reproduzir a compra do zero pra investigar da próxima
   vez.
+
+## v2.5.2 — "Nova" — 2026-08-02
+
+Cliente testou de novo depois da v2.5.1 com um valor de R$0,99 e o erro continuou. Causa raiz de
+verdade: **a InfinitePay tem um valor mínimo pra gerar link de pagamento (R$1,00) que não é
+documentado oficialmente** — confirmado testando a API real: um link de R$0,99 é recusado
+("Total price must be greater than 1"), R$1,00 é aceito normalmente. A correção da v2.5.1 só
+cobria o preço zerado por completo (cupom de 100%); um cupom que deixa um valor pequeno, mas maior
+que zero (ex.: R$0,99), ainda caía direto na InfinitePay e era recusado do mesmo jeito.
+
+- Nova constante `INFINITEPAY_VALOR_MINIMO_CENTAVOS` (`includes/infinitepay.php`), documentando o
+  valor mínimo real observado.
+- `processar_checkout()` (`includes/checkout_helper.php`) agora compara o preço final (depois do
+  cupom) em centavos contra esse mínimo, e não só contra zero — qualquer valor abaixo de R$1,00 (o
+  que na prática só acontece com cupom de desconto grande, preço de catálogo já é sempre R$1 ou
+  mais) confirma o pedido na hora, sem tentar passar pela InfinitePay, exatamente como a v2.5.1 já
+  fazia pro caso de preço exatamente zero — cobrança manual de menos de R$1 não compensa o esforço.
+- Testado de novo direto contra a API real da InfinitePay com R$0,99 (confirmado recusado) e R$1,00
+  (confirmado aceito), e localmente o fluxo de compra normal (preço cheio, sem cupom) continua
+  funcionando igual.

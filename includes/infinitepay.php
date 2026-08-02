@@ -12,6 +12,14 @@
 
 const INFINITEPAY_API_BASE = 'https://api.checkout.infinitepay.io';
 
+/**
+ * Valor mínimo aceito pela InfinitePay pra gerar um link de pagamento, em
+ * centavos. Não documentado oficialmente — confirmado testando a API real:
+ * R$0,99 (99) é rejeitado com "Total price must be greater than 1", R$1,00
+ * (100) é aceito. Ver includes/checkout_helper.php::processar_checkout().
+ */
+const INFINITEPAY_VALOR_MINIMO_CENTAVOS = 100;
+
 /** Faz um POST JSON simples via cURL. Retorna [statusCode, arrayDecodificado|null]. */
 function infinitepay_post(string $path, array $body): array
 {
