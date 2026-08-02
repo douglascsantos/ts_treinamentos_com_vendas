@@ -51,7 +51,10 @@ $alunoLogadoHeader = !empty($_SESSION['aluno_id']) ? find_aluno_by_id($_SESSION[
                 <li><a href="<?= e($base_path) ?>index.php#produtos">Produtos</a></li>
                 <li><a href="<?= e($base_path) ?>index.php#contato">Contato</a></li>
                 <?php if ($alunoLogadoHeader): ?>
-                    <li><a href="<?= e($base_path) ?>meus-dados.php" class="nav-aluno-logado">Bem-vindo, <?= e(primeiro_nome($alunoLogadoHeader['nome'])) ?></a></li>
+                    <li><a href="<?= e($base_path) ?>minha-conta.php" class="nav-aluno-logado">Bem-vindo, <?= e(primeiro_nome($alunoLogadoHeader['nome'])) ?></a></li>
+                    <li><a href="<?= e($base_path) ?>meus-dados.php">Meus dados</a></li>
+                    <li><a href="<?= e($base_path) ?>financeiro.php">Financeiro</a></li>
+                    <li><a href="<?= e($base_path) ?>logout.php">Sair da conta</a></li>
                 <?php else: ?>
                     <li><a href="<?= e($base_path) ?>area-do-aluno.php">Área do Aluno</a></li>
                 <?php endif; ?>
@@ -76,7 +79,10 @@ $alunoLogadoHeader = !empty($_SESSION['aluno_id']) ? find_aluno_by_id($_SESSION[
         <li><a href="<?= e($base_path) ?>index.php#produtos">Produtos</a></li>
         <li><a href="<?= e($base_path) ?>index.php#contato">Contato</a></li>
         <?php if ($alunoLogadoHeader): ?>
-            <li><a href="<?= e($base_path) ?>meus-dados.php" class="nav-aluno-logado">Bem-vindo, <?= e(primeiro_nome($alunoLogadoHeader['nome'])) ?></a></li>
+            <li><a href="<?= e($base_path) ?>minha-conta.php" class="nav-aluno-logado">Bem-vindo, <?= e(primeiro_nome($alunoLogadoHeader['nome'])) ?></a></li>
+            <li><a href="<?= e($base_path) ?>meus-dados.php">Meus dados</a></li>
+            <li><a href="<?= e($base_path) ?>financeiro.php">Financeiro</a></li>
+            <li><a href="<?= e($base_path) ?>logout.php">Sair da conta</a></li>
         <?php else: ?>
             <li><a href="<?= e($base_path) ?>area-do-aluno.php">Área do Aluno</a></li>
         <?php endif; ?>

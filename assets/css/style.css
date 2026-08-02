@@ -130,6 +130,11 @@ button { font: inherit; cursor: pointer; }
   background: #fff; box-shadow: -10px 0 30px rgba(0,0,0,.15);
   transform: translateX(100%); transition: transform .3s ease;
   padding: 90px 24px 24px;
+  /* A lista de itens do menu cresce (equipe logada, aluno logado com Meus
+     dados/Financeiro/Sair da conta) — em telas baixas (celular deitado,
+     iPhone SE) o conteúdo pode passar da altura da tela. Sem isso, o item
+     de baixo (ex.: "Sair da conta") fica inacessível, sem rolagem nenhuma. */
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
 }
 .mobile-nav.is-open { transform: translateX(0); }
 .mobile-nav[hidden], .mobile-nav-overlay[hidden] { display: none !important; }
@@ -414,13 +419,31 @@ button { font: inherit; cursor: pointer; }
 .auth-divider { text-align: center; color: var(--muted-foreground); font-size: .78rem; margin: 1.25rem 0; text-transform: uppercase; letter-spacing: .04em; }
 .auth-success { text-align: center; }
 
-/* Meus pedidos (minha-conta.php) */
+/* Minha Conta — cabeçalho enxuto (compras vêm logo abaixo, ver .pedidos-list) */
+.minha-conta-hero { padding-bottom: 0; }
+.minha-conta-hero h1 { margin-top: .5rem; font-size: 1.85rem; font-weight: 800; color: var(--primary); }
+@media (min-width: 768px) { .minha-conta-hero h1 { font-size: 2.25rem; } }
+.minha-conta-em-construcao { text-align: center; font-size: .85rem; }
+
+/* Meus pedidos (minha-conta.php) — mobile-first: card empilha (info em cima,
+   ações embaixo, botão ocupando a largura toda) até 560px, vira linha única
+   com ações à direita a partir daí. */
 .pedidos-list { margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem; }
-.pedido-card { background: #fff; border: 1px solid var(--border); border-radius: .85rem; padding: 1.1rem 1.35rem; box-shadow: var(--shadow-card); display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; align-items: center; justify-content: space-between; }
+.pedido-card {
+  background: #fff; border: 1px solid var(--border); border-radius: .85rem; padding: 1.1rem 1.35rem;
+  box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 1rem;
+}
+@media (min-width: 560px) {
+  .pedido-card { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem; }
+}
+.pedido-card-info { min-width: 0; }
 .pedido-card h3 { font-size: 1rem; color: var(--primary); }
 .pedido-card .muted { font-size: .82rem; color: var(--muted-foreground); margin-top: .2rem; }
-.pedido-card-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
-.pedido-card-actions .btn { padding: .55rem .9rem; font-size: .82rem; min-height: auto; }
+.pedido-card-actions { display: flex; flex-direction: column; gap: .6rem; }
+@media (min-width: 480px) { .pedido-card-actions { flex-direction: row; flex-wrap: wrap; } }
+.pedido-card-actions .btn { padding: .65rem 1rem; font-size: .85rem; min-height: 44px; }
+.pedido-status-btn { cursor: default; }
+.pedido-status-btn.btn-accent:hover { background: var(--accent); }
 
 /* Contrato assinado (meu-contrato.php) — impressão amigável */
 .contrato-full { max-width: 760px; }

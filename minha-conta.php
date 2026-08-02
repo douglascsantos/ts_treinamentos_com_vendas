@@ -64,38 +64,19 @@ function situacao_curso_pago(array $pedido): array
     return [$quando, 'status-last'];
 }
 
-/** Situação de um pedido de produto já pago: e-book mostra "Pago", físico mostra status de entrega. */
-function situacao_produto_pago(array $pedido): array
-{
-    $produto = find_produto($pedido['slug']);
-    if ($produto && produto_e_digital($produto['tipo'] ?? '')) {
-        return ['Pago', 'status-open'];
-    }
-    return STATUS_ENTREGA_LABELS[$pedido['status_entrega']] ?? ['A caminho', 'status-last'];
-}
-
 $novo = isset($_GET['novo']);
 $page_title = 'Minha Conta | ' . $config['site_name'];
 $base_path = '';
 include __DIR__ . '/includes/header.php';
 ?>
 
-<section class="section">
-    <div class="container page-content checkout-status-page">
+<section class="section minha-conta-hero">
+    <div class="container">
         <?php if ($novo): ?>
             <span class="badge badge-success">✅ Conta criada</span>
         <?php endif; ?>
-        <h1 class="checkout-status-title">Bem-vindo(a), <?= e(trim($aluno['pronome'] . ' ' . $aluno['nome'])) ?>!</h1>
-        <p class="lead-muted checkout-status-msg">
-            A Área do Aluno completa (histórico escolar, presenças e aulas online)
-            ainda está em construção — em breve tudo isso vai aparecer aqui.
-        </p>
-        <div class="checkout-actions">
-            <a class="btn btn-primary" href="index.php">Voltar ao site</a>
-            <a class="btn btn-accent" href="financeiro.php">Financeiro</a>
-            <a class="btn btn-accent" href="<?= e(wa_link($config['whatsapp'], 'Olá! Acabei de criar minha conta no site.')) ?>" target="_blank" rel="noopener">Falar no WhatsApp</a>
-            <a class="btn btn-outline-dark" href="logout.php">Sair da conta</a>
-        </div>
+        <p class="eyebrow">Área do Aluno</p>
+        <h1>Olá, <?= e(trim($aluno['pronome'] . ' ' . $aluno['nome'])) ?>!</h1>
     </div>
 </section>
 
@@ -116,7 +97,7 @@ include __DIR__ . '/includes/header.php';
                         : ($statusLabels[$p['status']] ?? ['Desconhecido', 'status-last']);
                 ?>
                     <div class="pedido-card">
-                        <div>
+                        <div class="pedido-card-info">
                             <h3><?= e($p['descricao']) ?></h3>
                             <p class="muted">
                                 Pedido <?= e($p['order_nsu']) ?> · <?= e(format_price((float) $p['preco'])) ?> ·
@@ -148,12 +129,13 @@ include __DIR__ . '/includes/header.php';
         <?php else: ?>
             <div class="pedidos-list">
                 <?php foreach ($produtos as $p):
-                    [$statusLabel, $statusClass] = $p['status'] === 'pago'
-                        ? situacao_produto_pago($p)
-                        : ($statusLabels[$p['status']] ?? ['Desconhecido', 'status-last']);
+                    [$statusLabel, $statusClass] = $statusLabels[$p['status']] ?? ['Desconhecido', 'status-last'];
+                    $produtoRef = $p['status'] === 'pago' ? find_produto($p['slug']) : null;
+                    $ehDigital = $produtoRef && produto_e_digital($produtoRef['tipo'] ?? '');
+                    $entregue = ($p['status_entrega'] ?? '') === 'entregue';
                 ?>
                     <div class="pedido-card">
-                        <div>
+                        <div class="pedido-card-info">
                             <h3><?= e($p['descricao']) ?></h3>
                             <p class="muted">
                                 Pedido <?= e($p['order_nsu']) ?> · <?= e(format_price((float) $p['preco'])) ?> ·
@@ -163,13 +145,15 @@ include __DIR__ . '/includes/header.php';
                         <div class="pedido-card-actions">
                             <a class="btn btn-outline-dark" href="meu-contrato.php?order_nsu=<?= e(rawurlencode($p['order_nsu'])) ?>">Ver contrato</a>
                             <?php if ($p['status'] === 'pago' && $p['receipt_url']): ?>
-                                <a class="btn btn-primary" href="<?= e($p['receipt_url']) ?>" target="_blank" rel="noopener">Ver recibo</a>
+                                <a class="btn btn-outline-dark" href="<?= e($p['receipt_url']) ?>" target="_blank" rel="noopener">Ver recibo</a>
                             <?php endif; ?>
-                            <?php if ($p['status'] === 'pago'):
-                                $produtoRef = find_produto($p['slug']);
-                            ?>
-                                <?php if ($produtoRef && produto_e_digital($produtoRef['tipo']) && !empty($produtoRef['arquivo_ebook'])): ?>
-                                    <a class="btn btn-accent" href="ebook-download.php?produto=<?= e(rawurlencode($p['slug'])) ?>">Baixar e-book</a>
+                            <?php if ($ehDigital && !empty($produtoRef['arquivo_ebook'])): ?>
+                                <a class="btn btn-accent" href="ebook-download.php?produto=<?= e(rawurlencode($p['slug'])) ?>">📄 Baixar e-book</a>
+                            <?php elseif ($produtoRef && !$ehDigital): ?>
+                                <?php if ($entregue): ?>
+                                    <span class="btn btn-accent pedido-status-btn" aria-disabled="true">✅ Entregue</span>
+                                <?php else: ?>
+                                    <a class="btn btn-primary" href="<?= e(wa_link($config['whatsapp'], 'Olá! Quero acompanhar o envio do meu pedido ' . $p['order_nsu'] . '.')) ?>" target="_blank" rel="noopener">📦 Acompanhar envio</a>
                                 <?php endif; ?>
                             <?php endif; ?>
                         </div>
@@ -190,7 +174,7 @@ include __DIR__ . '/includes/header.php';
         <div class="pedidos-list">
             <?php foreach ($certificados as $c): ?>
                 <div class="pedido-card">
-                    <div>
+                    <div class="pedido-card-info">
                         <h3><?= e($c['curso_nome']) ?></h3>
                         <p class="muted"><?= (int) $c['carga_horaria'] ?>h · concluído em <?= e(date('d/m/Y', strtotime($c['data_emissao']))) ?></p>
                     </div>
@@ -203,5 +187,14 @@ include __DIR__ . '/includes/header.php';
     </div>
 </section>
 <?php endif; ?>
+
+<section class="section" style="padding-top:0;">
+    <div class="container">
+        <p class="muted minha-conta-em-construcao">
+            A Área do Aluno completa (histórico escolar, presenças e aulas online) ainda está em
+            construção — em breve tudo isso vai aparecer aqui.
+        </p>
+    </div>
+</section>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

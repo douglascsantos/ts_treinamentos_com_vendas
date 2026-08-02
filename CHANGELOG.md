@@ -591,3 +591,31 @@ Confirmado pelo histórico do Git: `data/produtos.json` nunca teve o produto "te
   potencialmente o mesmo problema — também vive no repositório e também é editável ao vivo pelo
   painel (`equipe/turmas.php`). Ainda não confirmado se já causou perda de dado real; registrado
   pra investigar/corrigir numa próxima versão se o cliente notar o mesmo sintoma com turmas.
+
+## v2.7.0 — "Nova" — 2026-08-02
+
+Redesign pedido pelo cliente: `minha-conta.php` (Área do Aluno) não estava mobile-first e as
+compras — o que a maioria dos alunos realmente vem fazer nessa tela — ficavam escondidas embaixo
+de um bloco de boas-vindas com 4 botões grandes, a maioria redundante com algo que já existe em
+outro lugar do site.
+
+- **Compras primeiro**: a saudação virou uma linha só ("Olá, {nome}!"), sem o parágrafo grande
+  de "em construção" nem os botões — cursos e produtos comprados aparecem imediatamente depois,
+  no topo da página, em vez de precisar rolar.
+- **4 botões grandes → menu hambúrguer**: "Voltar ao site" (redundante — clicar na logo já faz
+  isso) e "Falar no WhatsApp" (redundante — já existe o botão flutuante de WhatsApp em toda
+  página) foram removidos. "Financeiro" e "Sair da conta" viraram itens de menu de verdade em
+  `includes/header.php` (desktop e mobile), junto com um novo item "Meus dados" (esse link só
+  existia embutido no "Bem-vindo" antes) — aparecem em qualquer página do site quando o aluno
+  está logado, não só na Minha Conta. "Bem-vindo, {nome}" agora leva pra `minha-conta.php` (era
+  `meus-dados.php`).
+- **Ação de entrega por pedido de produto**: pedido de produto físico pago agora mostra um botão
+  de verdade — "📦 Acompanhar envio" (abre WhatsApp já com o número do pedido) enquanto o status
+  configurado em `equipe/vendas.php` não for "entregue", ou "✅ Entregue" (não clicável) quando
+  for. E-book pago continua com "📄 Baixar e-book". Esse status deixou de aparecer só como texto
+  no selo — agora é uma ação, não só informação.
+- **Mobile-first de verdade no card de pedido**: `.pedido-card` empilhava mal em telas estreitas
+  (layout só com `flex-wrap`, sem regra dedicada pra mobile) e os botões de ação
+  (`.pedido-card-actions .btn`) tinham `min-height: auto` com padding pequeno — abaixo do alvo de
+  toque de 44px recomendado. Corrigido: card empilha em coluna até 560px (linha única, ações à
+  direita, a partir daí), botões de ação voltam a ter 44px mínimo de altura.
