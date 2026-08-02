@@ -217,6 +217,34 @@
     });
   }
 
+  /* Menu "Bem-vindo, {nome}" (desktop, [data-dropdown]) — abre/fecha no clique
+     do botão, fecha clicando fora ou com Esc. Só um por vez (se existisse mais
+     de um dropdown no futuro, abrir um fecha os outros). */
+  var dropdowns = document.querySelectorAll('[data-dropdown]');
+  function fecharDropdowns(exceto) {
+    dropdowns.forEach(function (dd) {
+      if (dd === exceto) { return; }
+      dd.classList.remove('is-open');
+      var trigger = dd.querySelector('.nav-dropdown-trigger');
+      if (trigger) { trigger.setAttribute('aria-expanded', 'false'); }
+    });
+  }
+  dropdowns.forEach(function (dd) {
+    var trigger = dd.querySelector('.nav-dropdown-trigger');
+    if (!trigger) { return; }
+    trigger.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var abrir = !dd.classList.contains('is-open');
+      fecharDropdowns();
+      dd.classList.toggle('is-open', abrir);
+      trigger.setAttribute('aria-expanded', String(abrir));
+    });
+  });
+  document.addEventListener('click', function () { fecharDropdowns(); });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') { fecharDropdowns(); }
+  });
+
   /* Padrão "lista primeiro": botão [data-toggle-target="id"] mostra/esconde um
      bloco escondido por padrão (formulário de cadastro) — usado no painel da
      equipe pra manter a tela limpa no mobile (lista em cima, formulário só

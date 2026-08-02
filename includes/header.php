@@ -51,10 +51,19 @@ $alunoLogadoHeader = !empty($_SESSION['aluno_id']) ? find_aluno_by_id($_SESSION[
                 <li><a href="<?= e($base_path) ?>index.php#produtos">Produtos</a></li>
                 <li><a href="<?= e($base_path) ?>index.php#contato">Contato</a></li>
                 <?php if ($alunoLogadoHeader): ?>
-                    <li><a href="<?= e($base_path) ?>minha-conta.php" class="nav-aluno-logado">Bem-vindo, <?= e(primeiro_nome($alunoLogadoHeader['nome'])) ?></a></li>
-                    <li><a href="<?= e($base_path) ?>meus-dados.php">Meus dados</a></li>
-                    <li><a href="<?= e($base_path) ?>financeiro.php">Financeiro</a></li>
-                    <li><a href="<?= e($base_path) ?>logout.php">Sair da conta</a></li>
+                    <li class="nav-dropdown" data-dropdown>
+                        <button type="button" class="nav-aluno-logado nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">
+                            Área do Aluno
+                            <span class="nav-dropdown-caret" aria-hidden="true">▾</span>
+                        </button>
+                        <ul class="nav-dropdown-menu">
+                            <li class="nav-dropdown-greeting">Bem-vindo, <?= e(primeiro_nome($alunoLogadoHeader['nome'])) ?></li>
+                            <li><a href="<?= e($base_path) ?>minha-conta.php">Minha conta</a></li>
+                            <li><a href="<?= e($base_path) ?>meus-dados.php">Meus dados</a></li>
+                            <li><a href="<?= e($base_path) ?>financeiro.php">Financeiro</a></li>
+                            <li><a href="<?= e($base_path) ?>logout.php">Sair da conta</a></li>
+                        </ul>
+                    </li>
                 <?php else: ?>
                     <li><a href="<?= e($base_path) ?>area-do-aluno.php">Área do Aluno</a></li>
                 <?php endif; ?>
@@ -79,7 +88,8 @@ $alunoLogadoHeader = !empty($_SESSION['aluno_id']) ? find_aluno_by_id($_SESSION[
         <li><a href="<?= e($base_path) ?>index.php#produtos">Produtos</a></li>
         <li><a href="<?= e($base_path) ?>index.php#contato">Contato</a></li>
         <?php if ($alunoLogadoHeader): ?>
-            <li><a href="<?= e($base_path) ?>minha-conta.php" class="nav-aluno-logado">Bem-vindo, <?= e(primeiro_nome($alunoLogadoHeader['nome'])) ?></a></li>
+            <li class="mobile-nav-greeting">Bem-vindo, <?= e(primeiro_nome($alunoLogadoHeader['nome'])) ?></li>
+            <li><a href="<?= e($base_path) ?>minha-conta.php">Área do Aluno</a></li>
             <li><a href="<?= e($base_path) ?>meus-dados.php">Meus dados</a></li>
             <li><a href="<?= e($base_path) ?>financeiro.php">Financeiro</a></li>
             <li><a href="<?= e($base_path) ?>logout.php">Sair da conta</a></li>

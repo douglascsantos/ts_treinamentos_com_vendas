@@ -640,3 +640,23 @@ que o comprador tinha que digitar duas vezes.
 - Testado direto contra a API real da InfinitePay com nome/e-mail/telefone de exemplo (aceito,
   link gerado normalmente) e localmente com uma conta de teste real ponta a ponta (cadastro →
   checkout → link de pagamento real, dados do aluno de teste presentes no payload enviado).
+
+## v2.7.2 — "Nova" — 2026-08-02
+
+Cliente reportou (com captura de tela) o menu do cabeçalho desconfigurado quando logado: "Bem-vindo,
+teste" e os outros itens do aluno quebravam linha e ficavam apertados/feios no desktop entre 900 e
+1200px de largura — exatamente o risco que o `design-mobile-first` já tinha apontado como achado
+não-bloqueante na v2.7.0 (mais itens de menu do que cabia numa linha só) e que, sem espaço de sobra
+suficiente, virou um problema visual real.
+
+- **Menu do aluno agora é um dropdown (desktop)**: em vez de 4 itens soltos ("Bem-vindo, {nome}",
+  "Meus dados", "Financeiro", "Sair da conta") disputando espaço com o menu principal, agora é um só
+  item — botão "Área do Aluno ▾" — que abre um painel com a saudação "Bem-vindo, {nome}" (só texto,
+  não é mais um link) e os links de verdade: Minha conta, Meus dados, Financeiro, Sair da conta.
+  Volta a caber numa linha só em qualquer largura de tela. Novo componente `[data-dropdown]` em
+  `assets/js/main.js` (abre/fecha no clique, fecha clicando fora ou com Esc — nenhum outro menu do
+  site usava esse padrão antes) + CSS novo em `assets/css/style.css`.
+- **Menu mobile (gaveta)**: pedido explícito do cliente — "Bem-vindo, {nome}" deixou de ser um link
+  dentro da lista (ficava junto dos outros itens clicáveis, causando parte da confusão visual) e virou
+  um rótulo separado, sem ação, logo acima do link "Área do Aluno" (que agora leva pra
+  `minha-conta.php`, igual ao botão do desktop — antes esse texto "Bem-vindo" é que fazia esse papel).

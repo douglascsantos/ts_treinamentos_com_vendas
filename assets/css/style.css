@@ -112,6 +112,29 @@ button { font: inherit; cursor: pointer; }
 }
 .nav-aluno-logado:hover { background: rgba(90,127,84,.2); }
 
+/* Menu "Bem-vindo, {nome}" do aluno logado (desktop) — agrupa Minha
+   conta/Meus dados/Financeiro/Sair da conta num só item com dropdown, em vez
+   de 4 itens soltos no menu principal (lotava/quebrava linha em telas entre
+   900-1200px). No menu mobile (gaveta) continua uma lista simples, sem
+   dropdown — não faz sentido aninhar menu dentro de menu numa coluna vertical. */
+.nav-dropdown { position: relative; }
+.nav-dropdown-trigger { font: inherit; font-size: .92rem; border: 0; cursor: pointer; display: inline-flex; align-items: center; gap: .35rem; }
+.nav-dropdown-caret { font-size: .7em; transition: transform .2s ease; }
+.nav-dropdown.is-open .nav-dropdown-caret { transform: rotate(180deg); }
+.nav-dropdown-menu {
+  position: absolute; top: calc(100% + .6rem); right: 0; z-index: 120; min-width: 190px;
+  background: #fff; border: 1px solid var(--border); border-radius: .75rem; box-shadow: var(--shadow-card);
+  padding: .4rem; display: none; flex-direction: column;
+}
+.nav-dropdown.is-open .nav-dropdown-menu { display: flex; }
+.nav-dropdown-menu a { display: block; padding: .8rem; min-height: 44px; box-sizing: border-box; border-radius: .5rem; font-size: .9rem; font-weight: 600; color: rgba(44,62,80,.85) !important; }
+.nav-dropdown-menu a:hover { background: var(--secondary); color: var(--primary) !important; }
+/* Saudação — separada dos links de verdade, não é clicável nem parece um botão. */
+.nav-dropdown-greeting {
+  padding: .5rem .8rem .6rem; margin-bottom: .3rem; border-bottom: 1px solid var(--border);
+  font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--accent);
+}
+
 .menu-disabled { opacity: .5; cursor: not-allowed; }
 .soon { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: var(--muted); color: var(--muted-foreground); padding: .1rem .4rem; border-radius: .3rem; margin-left: .4rem; }
 
@@ -139,6 +162,12 @@ button { font: inherit; cursor: pointer; }
 .mobile-nav.is-open { transform: translateX(0); }
 .mobile-nav[hidden], .mobile-nav-overlay[hidden] { display: none !important; }
 .mobile-nav a { display: block; padding: .9rem 0; font-weight: 600; font-size: 1.05rem; border-bottom: 1px solid var(--border); }
+/* Saudação do aluno — texto solto acima do link "Área do Aluno", separada da
+   lista de links (não é clicável, não parece nav item). */
+.mobile-nav-greeting {
+  padding: 1.1rem 0 .3rem; font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--accent);
+}
 .mobile-nav-overlay {
   position: fixed; inset: 0; z-index: 105; background: rgba(15,23,17,.45);
   opacity: 0; pointer-events: none; transition: opacity .3s ease;
