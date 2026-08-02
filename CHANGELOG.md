@@ -558,3 +558,36 @@ que zero (ex.: R$0,99), ainda caía direto na InfinitePay e era recusado do mesm
 - Testado de novo direto contra a API real da InfinitePay com R$0,99 (confirmado recusado) e R$1,00
   (confirmado aceito), e localmente o fluxo de compra normal (preço cheio, sem cupom) continua
   funcionando igual.
+
+## v2.6.0 — "Nova" — 2026-08-02
+
+Bug de fundo descoberto testando a v2.5.2: um produto de teste ("teste", R$0,99) que o cliente
+criou pelo painel (`equipe/produtos.php`) desapareceu depois dos deploys da v2.5.1/v2.5.2. Causa
+raiz: **qualquer produto criado ou editado pelo painel administrativo podia ser apagado no próximo
+deploy de código** — `data/produtos.json` vive dentro do repositório Git, e o painel grava direto
+nesse mesmo arquivo no servidor; todo `git push` sobrescrevia o arquivo de volta pro que estava
+commitado, descartando qualquer criação/edição feita ao vivo pelo painel desde o último commit.
+Confirmado pelo histórico do Git: `data/produtos.json` nunca teve o produto "teste" registrado.
+
+- **Catálogo de produtos migrou pro mesmo armazenamento de pedidos/alunos** (fora do repositório,
+  `includes/storage.php`) — `load_produtos()`/`save_produtos()` (`includes/produtos.php`) agora
+  leem/gravam nesse local, que nenhum deploy de código toca. `data/produtos.json` (dentro do
+  repositório) continua existindo só como "semente" inicial: na primeira leitura depois do deploy,
+  todo produto de lá que ainda não existe no catálogo ao vivo (por slug) é importado uma vez, sem
+  nunca sobrescrever o que já existe — assim o agente `produtos-sync` continua funcionando pra
+  produto novo, e edição feita pelo painel nunca mais é desfeita por um deploy.
+- Produto criado pelo painel também gera o arquivo da página individual
+  (`produtos/{slug}.php`) direto no servidor, fora do Git — mesmo problema, mesma causa: o arquivo
+  sumia se algum deploy fosse feito antes do próximo `git add` desse arquivo específico (o que nunca
+  acontecia, já que ninguém sabia que precisava fazer isso manualmente).
+- **Produto "teste" recriado** com o preço corrigido pra R$1,01 (acima do mínimo da InfinitePay,
+  ver v2.5.2) — dessa vez tanto o registro (`data/produtos.json`, semente) quanto a página
+  (`produtos/teste.php`) foram commitados junto com essa correção, garantindo que sobrevivem ao
+  deploy de hoje e a partir daí ficam protegidos pelo novo armazenamento.
+- Testado localmente: migração automática (todos os 4 produtos importados uma única vez, sem
+  duplicar em leituras repetidas), edição via painel sobrevivendo a uma simulação de reset do
+  arquivo semente, e compra completa do produto "teste" (R$1,01) gerando link real da InfinitePay.
+- **Risco relacionado, não corrigido nesta versão**: `data/turmas.json` (agenda de cursos) tem
+  potencialmente o mesmo problema — também vive no repositório e também é editável ao vivo pelo
+  painel (`equipe/turmas.php`). Ainda não confirmado se já causou perda de dado real; registrado
+  pra investigar/corrigir numa próxima versão se o cliente notar o mesmo sintoma com turmas.

@@ -1,5 +1,6 @@
 <?php
-/** Funções de apoio para ler e formatar o catálogo de produtos (data/produtos.json). */
+/** Funções de apoio para ler e formatar o catálogo de produtos. */
+require_once __DIR__ . '/storage.php';
 
 const PRODUTO_TIPO_LABELS = [
     'card' => 'Card',
@@ -10,18 +11,42 @@ const PRODUTO_TIPO_LABELS = [
 /** Tipos de produto que são entregues digitalmente (PDF) e por isso nunca esgotam. */
 const PRODUTO_TIPOS_DIGITAIS = ['book'];
 
-/** Carrega os produtos, mais recentes primeiro. */
+const PRODUTOS_FILE = 'produtos.json';
+
+/**
+ * Carrega os produtos. Fonte principal é o mesmo diretório fora do repositório
+ * usado por pedidos/alunos (ver includes/storage.php) — dessa forma um produto
+ * criado ou editado pelo painel administrativo (equipe/produtos.php) sobrevive
+ * a qualquer deploy de código, em vez de ser apagado no próximo `git push`
+ * (era o que acontecia antes: `data/produtos.json` vive dentro do repositório,
+ * e todo deploy sobrescrevia o arquivo de volta pro que estava commitado).
+ *
+ * `data/produtos.json` (dentro do repositório) continua existindo como a
+ * "semente" alimentada pelo agente produtos-sync/tools/sync_produtos.py — todo
+ * produto de lá que ainda não existe no catálogo "ao vivo" (por slug) é
+ * importado automaticamente aqui, uma vez, sem nunca sobrescrever um produto
+ * que já existe (a edição feita pelo painel sempre prevalece).
+ */
 function load_produtos(): array
 {
-    $path = __DIR__ . '/../data/produtos.json';
-    if (!is_file($path)) {
-        return [];
-    }
+    $produtos = storage_read_json(PRODUTOS_FILE);
 
-    $json = file_get_contents($path);
-    $produtos = json_decode($json, true);
-    if (!is_array($produtos)) {
-        return [];
+    $seedPath = __DIR__ . '/../data/produtos.json';
+    if (is_file($seedPath)) {
+        $seed = json_decode((string) file_get_contents($seedPath), true);
+        if (is_array($seed)) {
+            $slugsExistentes = array_column($produtos, 'slug');
+            $importou = false;
+            foreach ($seed as $produtoSeed) {
+                if (!in_array($produtoSeed['slug'] ?? null, $slugsExistentes, true)) {
+                    $produtos[] = $produtoSeed;
+                    $importou = true;
+                }
+            }
+            if ($importou) {
+                storage_write_json(PRODUTOS_FILE, $produtos);
+            }
+        }
     }
 
     return $produtos;
@@ -79,13 +104,12 @@ function produto_ativo(array $produto): bool
 }
 
 /**
- * Escrita usada só pelo painel administrativo (equipe/produtos.php). O site
- * público e o agente produtos-sync continuam só lendo via load_produtos()/find_produto().
+ * Escrita usada só pelo painel administrativo (equipe/produtos.php) — grava no
+ * catálogo "ao vivo" (fora do repositório), nunca em `data/produtos.json`.
  */
 function save_produtos(array $produtos): void
 {
-    $path = __DIR__ . '/../data/produtos.json';
-    file_put_contents($path, json_encode(array_values($produtos), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n");
+    storage_write_json(PRODUTOS_FILE, array_values($produtos));
 }
 
 function criar_produto(array $dados): array

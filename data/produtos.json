@@ -31,5 +31,16 @@
     "descricao": "",
     "arquivo_ebook": "hipodermoclise-na-pratica_ac09df4033324764.pdf",
     "ativo": true
+  },
+  {
+    "slug": "teste",
+    "nome": "Teste",
+    "tipo": "book",
+    "preco": 1.01,
+    "estoque": 9999,
+    "imagem": "anotacao-de-enfermagem.jpg",
+    "descricao": "Produto interno de teste — usado pra validar o fluxo de pagamento.",
+    "arquivo_ebook": null,
+    "ativo": true
   }
 ]

@@ -3,9 +3,10 @@
  * Gestão de produtos (cards, kits e e-books): lista primeiro, "+" revela o
  * cadastro, clicar num item edita (mesma tela, Salvar/Cancelar), "Desabilitar"
  * em vez de excluir — produto nunca é removido do banco, só some do site
- * público (ver produto_ativo() em includes/produtos.php). Continua escrevendo
- * em data/produtos.json — o mesmo arquivo que o site público e o agente
- * produtos-sync leem.
+ * público (ver produto_ativo() em includes/produtos.php). Escreve no catálogo
+ * "ao vivo" fora do repositório (ver load_produtos()/save_produtos() em
+ * includes/produtos.php) — sobrevive a deploy de código, diferente de
+ * data/produtos.json (só a semente inicial, versionada no Git).
  */
 require __DIR__ . '/../includes/functions.php';
 require __DIR__ . '/../includes/env.php';
