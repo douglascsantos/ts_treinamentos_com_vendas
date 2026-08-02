@@ -723,3 +723,20 @@ acumulados durante os testes desta sessão, e sessão de usuário mais curta.
   `produtos/teste.php` — precisa sair da semente também, senão a importação automática da v2.6.0
   (que reimporta qualquer slug da semente ausente do catálogo ao vivo) traria ele de volta sozinho
   no próximo carregamento.
+
+## v2.9.0 — "Nova" — 2026-08-02
+
+Aplicado o mesmo conserto da v2.6.0 (catálogo de produtos) pra `data/turmas.json` (agenda de
+cursos) — risco que já tinha sido registrado como pendente naquela versão, e que ia virar um
+problema de verdade agora que o cliente pediu pra criar uma turma de teste (ela sumiria no próximo
+deploy, exatamente como aconteceu com o produto "teste").
+
+- **Agenda de turmas também migrou pro armazenamento fora do repositório** —
+  `load_turmas()`/`save_turmas()` (`includes/turmas.php`) agora leem/gravam em `ts_site_data/`
+  (mesmo lugar de pedidos/alunos/produtos), que nenhum deploy de código toca. `data/turmas.json`
+  (dentro do repositório) continua como "semente" alimentada pelo agente `agenda-sync` — toda turma
+  de lá ainda ausente do catálogo ao vivo é importada uma vez, sem nunca sobrescrever o que já
+  existe, então uma turma criada ou editada pelo painel (`equipe/turmas.php`) nunca mais é apagada
+  por um deploy.
+- Testado localmente: as 6 turmas reais foram importadas uma única vez pro armazenamento ao vivo,
+  confirmado sem duplicar numa segunda leitura.

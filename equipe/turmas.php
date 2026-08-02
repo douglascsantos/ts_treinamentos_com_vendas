@@ -4,10 +4,11 @@
  * clicar numa turma abre o mesmo formulário pra editar (Salvar/Cancelar),
  * "Desabilitar"/"Reativar" no lugar de excluir — turma desabilitada some do
  * site público e não pode mais ser comprada, mas continua no banco (pedidos
- * antigos que referenciam ela continuam mostrando os dados certos). Continua
- * escrevendo em data/turmas.json — o mesmo arquivo que o site público e o
- * agente agenda-sync leem (ver tools/sync_agenda.py, que preserva esses
- * campos ao re-sincronizar).
+ * antigos que referenciam ela continuam mostrando os dados certos). Escreve
+ * no catálogo "ao vivo" fora do repositório (ver load_turmas()/save_turmas()
+ * em includes/turmas.php) — sobrevive a deploy de código, diferente de
+ * data/turmas.json (só a semente inicial, alimentada pelo agente agenda-sync
+ * — ver tools/sync_agenda.py — e versionada no Git).
  */
 require __DIR__ . '/../includes/functions.php';
 require __DIR__ . '/../includes/env.php';

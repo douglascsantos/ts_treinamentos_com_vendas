@@ -1,5 +1,6 @@
 <?php
-/** Funções de apoio para ler e formatar a agenda de turmas (data/turmas.json). */
+/** Funções de apoio para ler e formatar a agenda de turmas. */
+require_once __DIR__ . '/storage.php';
 
 const TURMA_STATUS_LABELS = [
     'aberta'   => ['Vagas abertas', 'status-open'],
@@ -12,18 +13,44 @@ const MESES_ABREV_PT = [
     7 => 'Jul', 8 => 'Ago', 9 => 'Set', 10 => 'Out', 11 => 'Nov', 12 => 'Dez',
 ];
 
-/** Carrega e ordena as turmas por data mais próxima primeiro. */
+const TURMAS_FILE = 'turmas.json';
+
+/**
+ * Carrega e ordena as turmas por data mais próxima primeiro. Fonte principal
+ * é o mesmo diretório fora do repositório usado por pedidos/alunos/produtos
+ * (ver includes/storage.php) — assim uma turma criada ou editada pelo painel
+ * (equipe/turmas.php) sobrevive a qualquer deploy de código, em vez de ser
+ * apagada no próximo `git push` (mesmo bug já corrigido pro catálogo de
+ * produtos na v2.6.0 — `data/turmas.json` vive dentro do repositório, e o
+ * painel gravava direto nesse mesmo arquivo no servidor; todo deploy
+ * sobrescrevia o arquivo de volta pro que estava commitado).
+ *
+ * `data/turmas.json` (dentro do repositório) continua existindo como a
+ * "semente" alimentada pelo agente agenda-sync/tools/sync_agenda.py — toda
+ * turma de lá que ainda não existe no catálogo "ao vivo" (por slug) é
+ * importada automaticamente aqui, uma vez, sem nunca sobrescrever uma turma
+ * que já existe (a edição feita pelo painel sempre prevalece).
+ */
 function load_turmas(): array
 {
-    $path = __DIR__ . '/../data/turmas.json';
-    if (!is_file($path)) {
-        return [];
-    }
+    $turmas = storage_read_json(TURMAS_FILE);
 
-    $json = file_get_contents($path);
-    $turmas = json_decode($json, true);
-    if (!is_array($turmas)) {
-        return [];
+    $seedPath = __DIR__ . '/../data/turmas.json';
+    if (is_file($seedPath)) {
+        $seed = json_decode((string) file_get_contents($seedPath), true);
+        if (is_array($seed)) {
+            $slugsExistentes = array_column($turmas, 'slug');
+            $importou = false;
+            foreach ($seed as $turmaSeed) {
+                if (!in_array($turmaSeed['slug'] ?? null, $slugsExistentes, true)) {
+                    $turmas[] = $turmaSeed;
+                    $importou = true;
+                }
+            }
+            if ($importou) {
+                storage_write_json(TURMAS_FILE, $turmas);
+            }
+        }
     }
 
     usort($turmas, function ($a, $b) {
@@ -126,13 +153,12 @@ function turma_dates_full(array $datas): string
 }
 
 /**
- * Escrita usada só pelo painel administrativo (equipe/turmas.php). O site
- * público e o agente agenda-sync continuam só lendo via load_turmas()/find_turma().
+ * Escrita usada só pelo painel administrativo (equipe/turmas.php) — grava no
+ * catálogo "ao vivo" (fora do repositório), nunca em `data/turmas.json`.
  */
 function save_turmas(array $turmas): void
 {
-    $path = __DIR__ . '/../data/turmas.json';
-    file_put_contents($path, json_encode(array_values($turmas), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n");
+    storage_write_json(TURMAS_FILE, array_values($turmas));
 }
 
 function atualizar_turma(string $slug, array $changes): ?array
