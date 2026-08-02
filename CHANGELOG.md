@@ -619,3 +619,24 @@ outro lugar do site.
   (`.pedido-card-actions .btn`) tinham `min-height: auto` com padding pequeno — abaixo do alvo de
   toque de 44px recomendado. Corrigido: card empilha em coluna até 560px (linha única, ações à
   direita, a partir daí), botões de ação voltam a ter 44px mínimo de altura.
+
+## v2.7.1 — "Nova" — 2026-08-02
+
+Pedido do cliente: a tela de pagamento da InfinitePay pedia nome completo, e-mail e WhatsApp de
+novo, mesmo o cliente já tendo preenchido tudo isso no cadastro do site — informação redundante
+que o comprador tinha que digitar duas vezes.
+
+- **Dados do aluno agora vão pro checkout**: `processar_checkout()` (`includes/checkout_helper.php`)
+  passa nome, e-mail e WhatsApp do aluno logado pro campo `customer` da API da InfinitePay (documentado
+  em infinitepay.io/checkout-documentacao — `name`, `email`, `phone_number` no formato
+  `+5511999887766`) — a tela de pagamento já chega com esses campos preenchidos. Nova função
+  `whatsapp_e164()` (`includes/functions.php`) converte o WhatsApp salvo (só dígitos, sem código do
+  país) pro formato que a InfinitePay espera.
+- **Código do curso/produto na descrição do item**: a API da InfinitePay não documenta nenhum campo
+  separado de código/SKU pro item (só `quantity`, `price`, `description`) — o código vai junto na
+  descrição (ex.: "Furo Humanizado (cód. FH-2608-01)"), usando `codigo_turma` pra curso ou o `slug`
+  pra produto (que não tem um código interno separado). A descrição usada no pedido/e-mail/painel
+  continua sem o código, só o texto enviado pra InfinitePay ganhou o sufixo.
+- Testado direto contra a API real da InfinitePay com nome/e-mail/telefone de exemplo (aceito,
+  link gerado normalmente) e localmente com uma conta de teste real ponta a ponta (cadastro →
+  checkout → link de pagamento real, dados do aluno de teste presentes no payload enviado).

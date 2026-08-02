@@ -20,6 +20,18 @@ function wa_link(string $whatsapp, string $message = ''): string
     return $url;
 }
 
+/**
+ * WhatsApp guardado só com dígitos, sem código do país (ex.: "17999999999",
+ * DDD + número) no formato E.164 que a InfinitePay pede no campo customer
+ * ("+5511999887766") — ver includes/checkout_helper.php::processar_checkout().
+ * Assume sempre Brasil (+55), único formato aceito no cadastro do site.
+ */
+function whatsapp_e164(string $whatsapp): string
+{
+    $digitos = preg_replace('/\D/', '', $whatsapp) ?? '';
+    return $digitos !== '' ? '+55' . $digitos : '';
+}
+
 /** URL absoluta (sempre https — obrigatório pra webhook_url da InfinitePay). */
 function site_base_url(): string
 {

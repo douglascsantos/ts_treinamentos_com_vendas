@@ -91,6 +91,7 @@ function processar_checkout(array $config, string $alunoId, array $intent): void
             exit;
         }
         $descricao = $item['curso'];
+        $codigo = $item['codigo_turma'] ?? $slug;
         $preco = (float) $item['preco'];
     } else {
         $item = find_produto($slug);
@@ -108,6 +109,7 @@ function processar_checkout(array $config, string $alunoId, array $intent): void
             exit;
         }
         $descricao = $item['nome'];
+        $codigo = $slug;
         $preco = (float) $item['preco'];
     }
 
@@ -115,6 +117,11 @@ function processar_checkout(array $config, string $alunoId, array $intent): void
         checkout_erro($config, 'Item gratuito', 'Esse item não passa por pagamento — fale com a gente pelo WhatsApp para mais informações.', 'Olá! Tenho uma dúvida sobre "' . $descricao . '".');
         exit;
     }
+
+    // Dados do aluno pra pré-preencher o checkout da InfinitePay (nome, e-mail,
+    // WhatsApp) — o cliente pediu isso especificamente pra não pedir de novo
+    // uma informação que a pessoa já preencheu no cadastro do site.
+    $aluno = find_aluno_by_id($alunoId);
 
     // Cupom é sempre revalidado no servidor — nunca confia no desconto mostrado na página.
     $cupomCodigo = trim($intent['cupom_codigo'] ?? '');
@@ -161,7 +168,6 @@ function processar_checkout(array $config, string $alunoId, array $intent): void
     // confirma o pedido na hora, sem gateway, igual o webhook faria.
     if ($precoComDescontoCentavos < INFINITEPAY_VALOR_MINIMO_CENTAVOS) {
         $pedidoPago = atualizar_pedido($pedido['order_nsu'], ['status' => 'pago']) ?? $pedido;
-        $aluno = find_aluno_by_id($alunoId);
         if ($aluno) {
             try {
                 enviar_email_compra_confirmada($aluno, $pedidoPago);
@@ -173,16 +179,30 @@ function processar_checkout(array $config, string $alunoId, array $intent): void
         exit;
     }
 
+    // Nome/e-mail/WhatsApp pré-preenchidos na tela de pagamento da InfinitePay
+    // — evita pedir de novo um dado que a pessoa já informou no cadastro do
+    // site. A API não documenta campo de código/SKU pro item, então o código
+    // (código da turma pro curso, slug pro produto) vai junto na descrição.
+    $customer = null;
+    if ($aluno) {
+        $customer = array_filter([
+            'name'         => trim(($aluno['pronome'] ?? '') . ' ' . $aluno['nome']),
+            'email'        => $aluno['email'] ?? null,
+            'phone_number' => !empty($aluno['whatsapp']) ? whatsapp_e164($aluno['whatsapp']) : null,
+        ]);
+    }
+
     $resultado = infinitepay_create_link(
         $config['infinitepay_handle'],
         [
             'quantity'       => 1,
             'price_centavos' => $precoComDescontoCentavos,
-            'description'    => $descricao,
+            'description'    => $descricao . ' (cód. ' . $codigo . ')',
         ],
         $pedido['order_nsu'],
         site_base_url() . '/pagamento-concluido.php',
         site_base_url() . '/webhook-infinitepay.php',
+        $customer,
     );
 
     if ($resultado['ok']) {
