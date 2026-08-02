@@ -14,6 +14,24 @@ require_once __DIR__ . '/produtos.php';
 require_once __DIR__ . '/pedidos.php';
 require_once __DIR__ . '/infinitepay.php';
 require_once __DIR__ . '/cupons.php';
+require_once __DIR__ . '/alunos.php';
+require_once __DIR__ . '/email.php';
+
+/**
+ * Registro de falhas reais ao gerar link de pagamento (resposta da InfinitePay,
+ * não erro de validação nossa) — pra dar pra diagnosticar sem precisar
+ * reproduzir a compra de novo. Mesmo padrão do webhook_log() em
+ * webhook-infinitepay.php, mas em arquivo separado (fora do repositório).
+ */
+function checkout_log(string $linha): void
+{
+    $dir = dirname(storage_path(PEDIDOS_FILE));
+    @file_put_contents(
+        $dir . '/checkout.log',
+        '[' . date('Y-m-d H:i:s') . '] ' . $linha . "\n",
+        FILE_APPEND | LOCK_EX
+    );
+}
 
 /** Mensagem de erro simples com saída pro WhatsApp e volta pro site — usada em todo o funil de checkout. */
 function checkout_erro(array $config, string $titulo, string $mensagem, ?string $waTexto = null): void
@@ -129,6 +147,26 @@ function processar_checkout(array $config, string $alunoId, array $intent): void
         marcar_cupom_usado($cupom['codigo'], $pedido['order_nsu']);
     }
 
+    // Cupom cobriu o valor inteiro (ex.: 100% de desconto, ou valor fixo maior
+    // que o preço) — não sobra nada pra cobrar na InfinitePay. Antes disso não
+    // era tratado à parte: caía direto em infinitepay_create_link() com
+    // price_centavos 0, que a InfinitePay rejeita — aparecendo pro cliente
+    // como "Não foi possível iniciar o pagamento" mesmo com um cupom válido.
+    // Aqui confirma o pedido na hora, sem gateway, igual o webhook faria.
+    if ($precoComDesconto <= 0) {
+        $pedidoPago = atualizar_pedido($pedido['order_nsu'], ['status' => 'pago']) ?? $pedido;
+        $aluno = find_aluno_by_id($alunoId);
+        if ($aluno) {
+            try {
+                enviar_email_compra_confirmada($aluno, $pedidoPago);
+            } catch (Throwable $e) {
+                checkout_log("Falha ao enviar e-mail de confirmação (pedido gratuito via cupom) pra {$pedido['order_nsu']}: " . $e->getMessage());
+            }
+        }
+        header('Location: ' . site_base_url() . '/pagamento-concluido.php?order_nsu=' . rawurlencode($pedido['order_nsu']));
+        exit;
+    }
+
     $resultado = infinitepay_create_link(
         $config['infinitepay_handle'],
         [
@@ -147,6 +185,7 @@ function processar_checkout(array $config, string $alunoId, array $intent): void
     }
 
     atualizar_pedido($pedido['order_nsu'], ['status' => 'erro']);
+    checkout_log("infinitepay_create_link falhou pro pedido {$pedido['order_nsu']} ({$tipo}/{$slug}, R$ " . number_format($precoComDesconto, 2, ',', '') . "): " . json_encode($resultado['raw'], JSON_UNESCAPED_UNICODE));
     checkout_erro(
         $config,
         'Não foi possível iniciar o pagamento',

@@ -516,3 +516,25 @@ aprovado, e mostrar direto a informação relevante (e-book liberado / turma mat
   (pagamento aparece "pendente" por alguns segundos), mostra aviso pra atualizar a página em vez de
   informação errada. Checagem de dono do pedido (nunca mostra detalhe de pedido de outra pessoa só
   por adivinhar o número na URL).
+
+## v2.5.1 — "Nova" — 2026-08-02
+
+Cliente reportou erro ao iniciar o pagamento na compra de um produto. Testado extensivamente contra
+a InfinitePay de verdade e contra o site em produção (chamada direta da API, e o funil completo —
+cadastro novo e já logado — replicado com uma conta descartável real): o caminho comum de compra
+(sem cupom) está funcionando. Encontrado e corrigido, por revisão de código, um caso real que gera
+exatamente esse erro:
+
+- **Cupom cobrindo 100% do preço (ou valor fixo maior que o preço) quebrava o pagamento**: a
+  checagem de "item gratuito" em `processar_checkout()` (`includes/checkout_helper.php`) olhava só
+  o preço original, antes do cupom ser aplicado — um cupom válido que zera o valor final não passava
+  por essa checagem e seguia direto pra `infinitepay_create_link()` com `price_centavos: 0`, que a
+  InfinitePay rejeita. Pro cliente aparecia exatamente como "Não foi possível iniciar o pagamento",
+  mesmo com um cupom certo. Corrigido: quando o preço com desconto fica em zero (ou menos), o pedido
+  agora é confirmado na hora como pago (sem passar pela InfinitePay, não tem o que cobrar), dispara o
+  e-mail de confirmação e vai direto pra `pagamento-concluido.php` — mesmo tratamento que um
+  pagamento de verdade confirmado pelo webhook.
+- **Novo log de diagnóstico** (`checkout_log()`, grava fora do repositório junto dos outros logs):
+  qualquer falha real da InfinitePay ao gerar o link de pagamento agora fica registrada com a
+  resposta completa da API, pra não precisar reproduzir a compra do zero pra investigar da próxima
+  vez.
